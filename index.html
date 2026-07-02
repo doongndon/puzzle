@@ -139,6 +139,30 @@
   .madang-tabs button .done-mark { color: var(--gold); margin-left: 4px; }
   .madang-tabs button.active .done-mark { color: #ffdf9e; }
 
+  /* ── 난이도 선택 ─────────────────────── */
+  .diff-row {
+    display: flex; justify-content: center; align-items: center;
+    gap: 10px; margin: -8px 0 20px;
+  }
+  .diff-label { font-size: 13px; color: var(--ink-faint); letter-spacing: .2em; }
+  .diff-tabs { display: flex; gap: 0; border: 1px solid #b9a175; border-radius: 4px; overflow: hidden; }
+  .diff-tabs button {
+    font-family: inherit; font-size: 13.5px;
+    padding: 6px 16px;
+    color: var(--ink-soft);
+    background: linear-gradient(#f6eedb, #eadcbb);
+    border: none;
+    border-right: 1px solid #b9a175;
+    cursor: pointer;
+    letter-spacing: .12em;
+  }
+  .diff-tabs button:last-child { border-right: none; }
+  .diff-tabs button.active {
+    color: #f6ecd8;
+    background: linear-gradient(#4f6e9c, #33538c);
+    text-shadow: 0 1px 2px rgba(0,0,0,.3);
+  }
+
   /* ── 본문 배치 ───────────────────────── */
   .layout { display: flex; gap: 26px; align-items: flex-start; }
   .board-wrap { flex: 0 1 auto; display: flex; flex-direction: column; gap: 14px; }
@@ -493,6 +517,10 @@
       </header>
 
       <nav class="madang-tabs" id="madangTabs" aria-label="마당 선택"></nav>
+      <div class="diff-row">
+        <span class="diff-label">난이도</span>
+        <nav class="diff-tabs" id="diffTabs" aria-label="난이도 선택"></nav>
+      </div>
 
       <div class="layout">
         <div class="board-wrap">
@@ -574,10 +602,12 @@
      - 글자 보따리에서 글자를 골라 빈 칸을 채워 낱말을 완성한다.
      - 완성한 낱말을 누르면 뜻풀이가 열린다. (열쇠/뜻은 처음에 비공개)
      ================================================================ */
-  const HINTS_PER_PUZZLE = 3;
-  const DEFS_PER_PUZZLE = 3;
-  const SEED_RATIO = 0.38;      // 처음에 밝혀 둘 글자 비율
-  const SAVE_KEY = "hanji-crossword-v2";
+  const DIFFS = [
+    { id: "easy",   name: "하수", desc: "쉬움 — 글자를 넉넉히 밝혀 둠",  seedRatio: 0.52, guarantee: true,  hints: 5, defs: 5 },
+    { id: "normal", name: "중수", desc: "보통 — 낱말마다 한 자쯤 밝혀 둠", seedRatio: 0.38, guarantee: true,  hints: 3, defs: 3 },
+    { id: "hard",   name: "고수", desc: "어려움 — 아주 드문드문 밝혀 둠",  seedRatio: 0.20, guarantee: false, hints: 2, defs: 2 },
+  ];
+  const SAVE_KEY = "hanji-crossword-v3";
   const DIR_KO = { across: "가로", down: "세로" };
 
   const $ = (id) => document.getElementById(id);
@@ -608,15 +638,20 @@
   catch { save = {}; }
   save.puzzles = save.puzzles || {};
   if (typeof save.current !== "number") save.current = 0;
+  if (typeof save.diff !== "number" || save.diff < 0 || save.diff >= DIFFS.length) save.diff = 1;
+
+  const diff = () => DIFFS[save.diff];
+  const pKey = (i) => `${i}:${diff().id}`;
 
   function persist() {
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch {}
   }
   function pSave(i) {
-    if (!save.puzzles[i]) {
-      save.puzzles[i] = { filled: [], hintCells: [], hints: HINTS_PER_PUZZLE, defs: DEFS_PER_PUZZLE, defsUsed: [], mistakes: 0 };
+    const k = pKey(i);
+    if (!save.puzzles[k]) {
+      save.puzzles[k] = { filled: [], hintCells: [], hints: diff().hints, defs: diff().defs, defsUsed: [], mistakes: 0 };
     }
-    return save.puzzles[i];
+    return save.puzzles[k];
   }
 
   /* ── 퍼즐 모형 만들기 ── */
@@ -653,9 +688,11 @@
     return grid;
   }
 
-  /* ── 씨앗 글자 고르기: 낱말마다 한 자쯤 밝히되, 어떤 낱말도 통째로 드러나지 않게 ── */
+  /* ── 씨앗 글자 고르기: 어떤 낱말도 통째로 드러나지 않게 밝혀 둔다 ──
+     하수/중수: 낱말마다 최소 한 글자 보장, 고수: 순전히 드문드문 ── */
   function computeSeeds(p, grid, pi) {
-    const rng = mulberry32(0x5EED + pi * 7919);
+    const d = diff();
+    const rng = mulberry32(0x5EED + pi * 7919 + save.diff * 104729);
     const seeds = new Set();
     const canSeed = (r, c) =>
       !seeds.has(key(r, c)) &&
@@ -664,18 +701,20 @@
         const hidden = w.cells.filter(([rr, cc]) => !seeds.has(key(rr, cc))).length;
         return hidden - 1 >= 1; // 이 칸을 밝혀도 숨은 글자가 남는가
       });
-    // 1단계: 낱말마다 최소 한 글자
-    p.words.forEach((w) => {
-      if (w.cells.some(([r, c]) => seeds.has(key(r, c)))) return;
-      const cand = shuffle(w.cells.slice(), rng).find(([r, c]) => canSeed(r, c));
-      if (cand) seeds.add(key(cand[0], cand[1]));
-    });
+    // 1단계: 낱말마다 최소 한 글자 (난이도에 따라)
+    if (d.guarantee) {
+      p.words.forEach((w) => {
+        if (w.cells.some(([r, c]) => seeds.has(key(r, c)))) return;
+        const cand = shuffle(w.cells.slice(), rng).find(([r, c]) => canSeed(r, c));
+        if (cand) seeds.add(key(cand[0], cand[1]));
+      });
+    }
     // 2단계: 목표 비율까지 채우기
     const all = [];
     for (let r = 0; r < p.size; r++)
       for (let c = 0; c < p.size; c++)
         if (grid[r][c]) all.push([r, c]);
-    const target = Math.round(all.length * SEED_RATIO);
+    const target = Math.round(all.length * d.seedRatio);
     shuffle(all, rng).forEach(([r, c]) => {
       if (seeds.size >= target) return;
       if (canSeed(r, c)) seeds.add(key(r, c));
@@ -697,7 +736,7 @@
   const solvedCount = () => puzzle.words.reduce((n, w) => n + (wordSolved(w.wi) ? 1 : 0), 0);
 
   function computeTray() {
-    const rng = mulberry32(0x7AA9 + cur * 104729);
+    const rng = mulberry32(0x7AA9 + cur * 104729 + save.diff * 7919);
     const letters = [];
     for (let r = 0; r < puzzle.size; r++)
       for (let c = 0; c < puzzle.size; c++)
@@ -751,10 +790,30 @@
       const b = document.createElement("button");
       const done = i === cur
         ? solvedCount() === puzzle.words.length
-        : (save.puzzles[i] && save.puzzles[i].done);
+        : (save.puzzles[pKey(i)] && save.puzzles[pKey(i)].done);
       b.innerHTML = `${p.name} · ${p.theme}${done ? ' <span class="done-mark">完</span>' : ""}`;
       if (i === cur) b.classList.add("active");
       b.addEventListener("click", () => loadPuzzle(i));
+      nav.appendChild(b);
+    });
+    renderDiffTabs();
+  }
+
+  function renderDiffTabs() {
+    const nav = $("diffTabs");
+    nav.innerHTML = "";
+    DIFFS.forEach((d, di) => {
+      const b = document.createElement("button");
+      b.textContent = d.name;
+      b.title = d.desc;
+      if (di === save.diff) b.classList.add("active");
+      b.addEventListener("click", () => {
+        if (di === save.diff) return;
+        save.diff = di;
+        persist();
+        loadPuzzle(cur); // 난이도별로 진행이 따로 저장되므로 그대로 전환
+        toast(`${d.name} 난이도 — ${d.desc.split(" — ")[1]}.`, "good");
+      });
       nav.appendChild(b);
     });
   }
@@ -1052,8 +1111,8 @@
     const ps = pSave(cur);
     ps.done = true;
     persist();
-    const usedHints = HINTS_PER_PUZZLE - ps.hints;
-    const usedDefs = DEFS_PER_PUZZLE - ps.defs;
+    const usedHints = diff().hints - ps.hints;
+    const usedDefs = diff().defs - ps.defs;
     const mistakes = ps.mistakes || 0;
     const hasNext = cur < PUZZLES.length - 1;
     setTimeout(() => {
@@ -1092,7 +1151,7 @@
   $("defBtn").addEventListener("click", useDef);
   $("resetBtn").addEventListener("click", () => {
     if (!confirm("이 마당을 처음부터 다시 풀겠소?")) return;
-    delete save.puzzles[cur];
+    delete save.puzzles[pKey(cur)];
     loadPuzzle(cur);
     toast("새 마음으로 다시 시작하오.", "good");
   });
