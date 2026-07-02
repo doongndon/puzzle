@@ -608,7 +608,10 @@
             </div>
           </section>
 
-          <button class="btn ghost" id="resetBtn" style="align-self:flex-end;">이 마당 새로 풀기</button>
+          <div style="display:flex; gap:10px; align-self:flex-end;">
+            <button class="btn" id="newRandomBtn" hidden>새 판 뽑기</button>
+            <button class="btn ghost" id="resetBtn">이 마당 새로 풀기</button>
+          </div>
         </aside>
       </div>
 
@@ -645,6 +648,21 @@
   ];
   const SAVE_KEY = "hanji-crossword-v3";
   const DIR_KO = { across: "가로", down: "세로" };
+  const RANDOM = PUZZLES.length;      // 랜덤 마당 탭 번호
+  const RANDOM_SIZE = 11;             // 랜덤 판 크기
+  const RANDOM_TARGET = 14;           // 랜덤 판 목표 낱말 수
+
+  /* 150개 낱말 풀: 고정 마당의 낱말 + 랜덤 전용 낱말 */
+  const WORD_POOL = (() => {
+    const map = new Map();
+    PUZZLES.forEach((p) => p.words.forEach((w) => {
+      if (!map.has(w.answer)) map.set(w.answer, { answer: w.answer, clue: w.clue || "", def: w.def });
+    }));
+    EXTRA_WORDS.forEach((w) => {
+      if (!map.has(w.answer)) map.set(w.answer, { answer: w.answer, clue: w.clue || "", def: w.def });
+    });
+    return [...map.values()];
+  })();
 
   const $ = (id) => document.getElementById(id);
   const boardEl = $("board");
@@ -675,9 +693,10 @@
   save.puzzles = save.puzzles || {};
   if (typeof save.current !== "number") save.current = 0;
   if (typeof save.diff !== "number" || save.diff < 0 || save.diff >= DIFFS.length) save.diff = 1;
+  if (typeof save.randomSeed !== "number") save.randomSeed = Math.floor(Math.random() * 2147483647);
 
   const diff = () => DIFFS[save.diff];
-  const pKey = (i) => `${i}:${diff().id}`;
+  const pKey = (i) => (i === RANDOM ? `R${save.randomSeed}:${diff().id}` : `${i}:${diff().id}`);
 
   function persist() {
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch {}
@@ -758,8 +777,110 @@
     return seeds;
   }
 
+  /* ── 랜덤 마당 만들기: 150개 낱말 풀에서 뽑아 교차 배치 ── */
+  function tryGenerate(seed) {
+    const rng = mulberry32(seed ^ 0x9E3779B9);
+    const size = RANDOM_SIZE;
+    const g = Array.from({ length: size }, () => Array(size).fill(null));
+    // 칸마다 어느 방향 낱말이 지나는지 기록 (같은 방향 겹쳐 얹기 방지: 물레 위에 물레방아 등)
+    const used = {
+      across: Array.from({ length: size }, () => Array(size).fill(false)),
+      down: Array.from({ length: size }, () => Array(size).fill(false)),
+    };
+    const placed = [];
+    const pool = shuffle(WORD_POOL.slice(), rng);
+
+    // 낱말을 (r,c,dir)에 둘 수 있는지 — 표준 십자말풀이 규칙 검사
+    const canPlace = (answer, r, c, dir) => {
+      const chars = [...answer];
+      const dr = dir === "down" ? 1 : 0, dc = dir === "across" ? 1 : 0;
+      const endR = r + dr * (chars.length - 1), endC = c + dc * (chars.length - 1);
+      if (r < 0 || c < 0 || endR >= size || endC >= size) return -1;
+      if (r - dr >= 0 && c - dc >= 0 && g[r - dr][c - dc]) return -1;        // 낱말 앞 칸
+      if (endR + dr < size && endC + dc < size && g[endR + dr][endC + dc]) return -1; // 낱말 뒤 칸
+      let crossings = 0;
+      for (let i = 0; i < chars.length; i++) {
+        const rr = r + dr * i, cc = c + dc * i;
+        if (g[rr][cc]) {
+          if (g[rr][cc] !== chars[i]) return -1;
+          if (used[dir][rr][cc]) return -1; // 같은 방향 낱말과 겹침
+          crossings++;
+        } else {
+          // 교차점이 아닌 새 칸은 옆줄과 붙으면 안 됨
+          const n1r = rr + dc, n1c = cc + dr, n2r = rr - dc, n2c = cc - dr;
+          if (n1r < size && n1c < size && g[n1r][n1c]) return -1;
+          if (n2r >= 0 && n2c >= 0 && g[n2r][n2c]) return -1;
+        }
+      }
+      return crossings;
+    };
+    const putWord = (w, r, c, dir) => {
+      const chars = [...w.answer];
+      const dr = dir === "down" ? 1 : 0, dc = dir === "across" ? 1 : 0;
+      chars.forEach((ch, i) => {
+        g[r + dr * i][c + dc * i] = ch;
+        used[dir][r + dr * i][c + dc * i] = true;
+      });
+      placed.push({ answer: w.answer, clue: w.clue, def: w.def, row: r, col: c, dir });
+    };
+
+    // 첫 낱말은 가운데에
+    const first = pool.find((w) => [...w.answer].length <= 4) || pool[0];
+    const fl = [...first.answer].length;
+    putWord(first, Math.floor(size / 2), Math.floor((size - fl) / 2), "across");
+
+    // 교차 가능한 낱말을 하나씩 붙여 나간다
+    let progress = true;
+    while (placed.length < RANDOM_TARGET && progress) {
+      progress = false;
+      for (const w of pool) {
+        if (placed.length >= RANDOM_TARGET) break;
+        if (placed.some((p) => p.answer === w.answer)) continue;
+        const chars = [...w.answer];
+        const options = [];
+        for (let r = 0; r < size; r++) {
+          for (let c = 0; c < size; c++) {
+            if (!g[r][c]) continue;
+            chars.forEach((ch, i) => {
+              if (ch !== g[r][c]) return;
+              if (canPlace(w.answer, r, c - i, "across") > 0) options.push([r, c - i, "across"]);
+              if (canPlace(w.answer, r - i, c, "down") > 0) options.push([r - i, c, "down"]);
+            });
+          }
+        }
+        if (options.length) {
+          const [r, c, dir] = options[Math.floor(rng() * options.length)];
+          putWord(w, r, c, dir);
+          progress = true;
+        }
+      }
+    }
+
+    // 쓰인 영역을 판 가운데로 옮긴다
+    let minR = size, maxR = 0, minC = size, maxC = 0;
+    for (let r = 0; r < size; r++)
+      for (let c = 0; c < size; c++)
+        if (g[r][c]) { minR = Math.min(minR, r); maxR = Math.max(maxR, r); minC = Math.min(minC, c); maxC = Math.max(maxC, c); }
+    const shiftR = Math.floor((size - 1 - (maxR - minR)) / 2) - minR;
+    const shiftC = Math.floor((size - 1 - (maxC - minC)) / 2) - minC;
+    return {
+      name: "랜덤 마당", theme: "복불복", size,
+      words: placed.map((w) => ({ answer: w.answer, clue: w.clue, def: w.def, dir: w.dir, row: w.row + shiftR, col: w.col + shiftC })),
+    };
+  }
+
+  function generateRandom(seed) {
+    let best = null;
+    for (let attempt = 0; attempt < 12; attempt++) {
+      const p = tryGenerate(seed + attempt * 7919);
+      if (!best || p.words.length > best.words.length) best = p;
+      if (best.words.length >= 11) break;
+    }
+    return best;
+  }
+
   /* ── 실행 상태 ── */
-  let cur = Math.min(Math.max(save.current, 0), PUZZLES.length - 1);
+  let cur = Math.min(Math.max(save.current, 0), RANDOM);
   let puzzle, grid, seeds;
   let filled, hintCells, defsUsed; // Set
   let tray = [];                   // 남은 글자들 (순서 유지)
@@ -772,7 +893,7 @@
   const solvedCount = () => puzzle.words.reduce((n, w) => n + (wordSolved(w.wi) ? 1 : 0), 0);
 
   function computeTray() {
-    const rng = mulberry32(0x7AA9 + cur * 104729 + save.diff * 7919);
+    const rng = mulberry32(0x7AA9 + boardId() * 104729 + save.diff * 7919);
     const letters = [];
     for (let r = 0; r < puzzle.size; r++)
       for (let c = 0; c < puzzle.size; c++)
@@ -787,12 +908,14 @@
     return letters;
   }
 
+  const boardId = () => (cur === RANDOM ? 1000 + save.randomSeed : cur);
+
   function loadPuzzle(i) {
     cur = i;
     save.current = i;
-    puzzle = PUZZLES[i];
+    puzzle = i === RANDOM ? generateRandom(save.randomSeed) : PUZZLES[i];
     grid = buildModel(puzzle);
-    seeds = computeSeeds(puzzle, grid, i);
+    seeds = computeSeeds(puzzle, grid, boardId());
     const ps = pSave(i);
     filled = new Set(ps.filled);
     hintCells = new Set(ps.hintCells);
@@ -822,16 +945,19 @@
   function renderTabs() {
     const nav = $("madangTabs");
     nav.innerHTML = "";
-    PUZZLES.forEach((p, i) => {
+    const addTab = (label, i) => {
       const b = document.createElement("button");
       const done = i === cur
         ? solvedCount() === puzzle.words.length
         : (save.puzzles[pKey(i)] && save.puzzles[pKey(i)].done);
-      b.innerHTML = `${p.name} · ${p.theme}${done ? ' <span class="done-mark">完</span>' : ""}`;
+      b.innerHTML = `${label}${done ? ' <span class="done-mark">完</span>' : ""}`;
       if (i === cur) b.classList.add("active");
       b.addEventListener("click", () => loadPuzzle(i));
       nav.appendChild(b);
-    });
+    };
+    PUZZLES.forEach((p, i) => addTab(`${p.name} · ${p.theme}`, i));
+    addTab("랜덤 마당 · 복불복", RANDOM);
+    $("newRandomBtn").hidden = cur !== RANDOM;
     renderDiffTabs();
   }
 
@@ -1150,7 +1276,9 @@
     const usedHints = diff().hints - ps.hints;
     const usedDefs = diff().defs - ps.defs;
     const mistakes = ps.mistakes || 0;
-    const hasNext = cur < PUZZLES.length - 1;
+    // 다음 단추: 고정 마당 → 다음 마당(마지막 뒤엔 랜덤 마당), 랜덤 마당 → 새 판 뽑기
+    const nextLabel = cur === RANDOM ? "새 판 뽑기"
+      : (cur + 1 === RANDOM ? "랜덤 마당으로" : "다음 마당으로");
     setTimeout(() => {
       const card = $("finishCard");
       card.innerHTML = `
@@ -1160,13 +1288,14 @@
         힌트 <span class="stat">${usedHints}</span>번, 뜻보기 <span class="stat">${usedDefs}</span>번, 헛짚기 <span class="stat">${mistakes}</span>번.</p>
         <p style="font-size:13px;color:var(--ink-3);">완성한 낱말을 누르면 언제든 뜻풀이를 볼 수 있소.</p>
         <div class="close-row">
-          ${hasNext ? '<button class="btn" id="nextMadang">다음 마당으로</button>' : ""}
+          <button class="btn" id="nextMadang">${nextLabel}</button>
           <button class="btn ghost" id="finishClose">판 구경하기</button>
         </div>`;
       $("finishVeil").classList.add("show");
-      if (hasNext) $("nextMadang").addEventListener("click", () => {
+      $("nextMadang").addEventListener("click", () => {
         $("finishVeil").classList.remove("show");
-        loadPuzzle(cur + 1);
+        if (cur === RANDOM) newRandomBoard();
+        else loadPuzzle(cur + 1);
       });
       $("finishClose").addEventListener("click", () => $("finishVeil").classList.remove("show"));
     }, 650);
@@ -1183,6 +1312,14 @@
   }
 
   /* ── 이벤트 연결 ── */
+  function newRandomBoard() {
+    delete save.puzzles[pKey(RANDOM)]; // 지금 판의 진행 기록 정리
+    save.randomSeed = Math.floor(Math.random() * 2147483647);
+    persist();
+    loadPuzzle(RANDOM);
+    toast(`새 판을 뽑았소! 낱말 ${puzzle.words.length}개.`, "good");
+  }
+  $("newRandomBtn").addEventListener("click", newRandomBoard);
   $("hintBtn").addEventListener("click", useHint);
   $("defBtn").addEventListener("click", useDef);
   $("resetBtn").addEventListener("click", () => {
@@ -1207,6 +1344,10 @@
     isFilled: (r, c) => isFilled(key(r, c)),
     trayLetters: () => tray.slice(),
     solvedCount,
+    size: () => puzzle.size,
+    wordCount: () => puzzle.words.length,
+    poolSize: WORD_POOL.length,
+    generate: (s) => generateRandom(s),
   };
   </script>
 </body>
