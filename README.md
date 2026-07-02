@@ -24,8 +24,7 @@ python3 -m http.server 8000
 
 1. **마당 고르기** — 여섯 개의 고정 마당(나라와 얼 / 맛과 살림 / 놀이와 자연 /
    계절과 하늘 / 옛이야기와 풍류 / 사자성어)과 **랜덤 마당** 가운데 하나를 고릅니다.
-   랜덤 마당은 150개 낱말 풀에서 뽑아 11×11 판을 즉석에서 짜 주며,
-   '새 판 뽑기'를 누를 때마다 새로운 판이 나옵니다.
+   랜덤 마당은 150개 낱말 풀에서 뽑아 11×11 판을 즉석에서 짜 주며,'새 판 뽑기'를 누를 때마다 새로운 판이 나옵니다.
    **난이도**(하수·중수·고수)도 고를 수 있으며, 난이도마다 진행이 따로 저장됩니다.
 2. **빈 칸 고르기** — 낱말판의 빈 칸을 누릅니다. 가로·세로가 겹치는 칸은
    다시 누르면 방향이 바뀝니다.
@@ -67,3 +66,75 @@ puzzles.js   퍼즐 데이터 (고정 마당 6개 · 낱말 95개 + 랜덤 전�
 새 퍼즐을 만들려면 `puzzles.js`에 마당을 추가하면 됩니다. 각 낱말은
 방향(`across`/`down`), 시작 칸(`row`, `col`), 정답, 열쇠(`clue`),
 뜻풀이(`def`)로 이루어집니다.
+
+  # Word-of-the-word puzzle yard — Hangul horizontal and vertical puzzles
+
+This is a Korean word puzzle with a traditional Korean atmosphere, enjoyed without advertisements.
+A static web app decorated with Hanji texture, Gungseo font, and the colors of Dancheong, without server or external dependence.
+It works anywhere with just a browser.
+
+## How to Execute
+
+All you need to do is open `index.html` in your browser.
+
+```bash
+# Just open the file or
+open index.html
+
+# You can open it with a simple local server
+python3 -m http.server 8000
+# → http://localhost:8000
+```
+
+## Playing Methods
+
+At first, they don't tell you the meaning (key) of the word. The sporadically revealed information on the plate.
+Using the letters as a clue, fill in the blanks by selecting a letter from the **letter bundle** below.
+
+1. **Choosing the Yard** — Six fixed Yards (Nation and Spirit / Taste and Living / Play and Nature /
+Choose one between the seasons and the sky / old tales and elegance / idioms) and **random yard**.
+The random yard is made by weaving 11x11 boards on the spot from a pool of 150 words, and...
+Every time you click 'Draw a new board,' a new board appears.
+**Difficulty levels** (sewer, intermediate, and advanced) can also be selected, and progress is saved separately for each difficulty level.
+2. **Fill the blank** — Press the blank on the word board. The spaces where the width and height overlap are...
+If you press it again, the direction changes.
+3. **Filling** — If you press the appropriate letter from the letter bundle, it will be placed in the space.
+Incorrect letters are not placed and are recorded as false errors.
+4. **View the meaning** — When a word is completed, that word opens. The space of the completed word or...
+When you click on the word list, a dictionary definition unfolds on the scroll, and...
+Direct access to the Standard Korean Language Dictionary is also open.
+
+## Treasure Pouch (Item)
+
+| Item | Number (low/medium/expert) | Effect |
+|---|---|---|
+| Hint | 5 / 3 / 2 | Illuminate the letters in the selected blanks |
+| View the meaning | 5 / 3 / 2 | Shows the dictionary definitions of selected words in advance |
+
+## Difficulty
+
+| Difficulty | The initial characters to be revealed | Features |
+|---|---|---|
+| Amateur | About half | Reveal at least one character for each word |
+| Intermediate | About one-third | At least one character is disclosed for each word |
+| Master | About 1/5 | There are also hidden words entirely |
+
+## Features
+
+- **No Advertisement** — There are no ads, tracking, or external scripts at all.
+- **Traditional UI** — Hanji texture, Gungseo font (in unsupported environments, Myeongjo font), Dancheong belt, and seal seal.
+- **Save progress** — The solved status and remaining items are saved in the browser (localStorage).
+- **Responsive** — It is tailored to all screens on mobile phones, tablets, and computers.
+
+## File Configuration
+
+```
+Index.html app body (including screen, format, and operation)
+puzzles.js puzzle data (6 fixed yards, 95 words + 55 random-only = 150)
+```
+
+To create a new puzzle, you can add a yard to `puzzles.js`. Each word is...
+Direction (`across`/`down`), start box (`row`, `col`), answer, key (`clue`),
+It consists of meaning interpretation (`def`).
+
+
