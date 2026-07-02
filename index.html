@@ -267,6 +267,8 @@
   }
   .cell.hint-cell .letter { color: var(--blue); }
   .cell.seed-cell .letter { color: var(--ink-2); }
+  .cell.pending-cell { background: #f2e6c8; }
+  .cell.pending-cell .letter { color: var(--ink-3); }
 
   /* ── 글자 보따리 ─────────────────────── */
   .panel {
@@ -575,7 +577,7 @@
         <aside class="side">
           <section class="panel clue-current">
             <h2>지금 낱말 <span class="small" id="selMeta"></span></h2>
-            <div id="clueBox"><p class="placeholder">판의 빈 칸을 누르고, 글자 보따리에서<br>알맞은 글자를 골라 낱말을 완성하시오.<br>낱말을 완성하면 뜻풀이가 열리오.</p></div>
+            <div id="clueBox"><p class="placeholder">판의 빈 칸을 누르고, 글자 보따리에서<br>글자를 골라 낱말을 짜 보시오.<br>칸이 다 차면 단어째 맞는지 확인하며,<br>맞힌 낱말은 뜻풀이가 열리오.</p></div>
           </section>
 
           <section class="panel">
@@ -883,12 +885,14 @@
   let cur = Math.min(Math.max(save.current, 0), RANDOM);
   let puzzle, grid, seeds;
   let filled, hintCells, defsUsed; // Set
+  let pending = new Map();         // 아직 확정되지 않은 임시 글자 (칸 → 글자)
   let tray = [];                   // 남은 글자들 (순서 유지)
   let selCell = null;              // 고른 빈 칸 key
   let selWi = null;                // 고른 낱말
   let cellEls = {};
 
   const isFilled = (k) => seeds.has(k) || filled.has(k);
+  const isOccupied = (k) => isFilled(k) || pending.has(k);
   const wordSolved = (wi) => puzzle.words[wi].cells.every(([r, c]) => isFilled(key(r, c)));
   const solvedCount = () => puzzle.words.reduce((n, w) => n + (wordSolved(w.wi) ? 1 : 0), 0);
 
@@ -920,6 +924,7 @@
     filled = new Set(ps.filled);
     hintCells = new Set(ps.hintCells);
     defsUsed = new Set(ps.defsUsed);
+    pending = new Map();
     tray = computeTray();
     selCell = null;
     selWi = null;
@@ -1023,7 +1028,8 @@
         el.classList.toggle("cursor", selCell === k);
         el.classList.toggle("seed-cell", seeds.has(k));
         el.classList.toggle("hint-cell", hintCells.has(k));
-        el.querySelector(".letter").textContent = isFilled(k) ? cell.letter : "";
+        el.classList.toggle("pending-cell", pending.has(k));
+        el.querySelector(".letter").textContent = isFilled(k) ? cell.letter : (pending.get(k) || "");
       }
     }
   }
@@ -1070,19 +1076,22 @@
     const box = $("clueBox");
     const meta = $("selMeta");
     if (selWi === null) {
-      box.innerHTML = '<p class="placeholder">판의 빈 칸을 누르고, 글자 보따리에서<br>알맞은 글자를 골라 낱말을 완성하시오.<br>낱말을 완성하면 뜻풀이가 열리오.</p>';
+      box.innerHTML = '<p class="placeholder">판의 빈 칸을 누르고, 글자 보따리에서<br>글자를 골라 낱말을 짜 보시오.<br>칸이 다 차면 단어째 맞는지 확인하며,<br>맞힌 낱말은 뜻풀이가 열리오.</p>';
       meta.textContent = "";
       return;
     }
     const w = puzzle.words[selWi];
     meta.textContent = `${DIR_KO[w.dir]} ${w.number}번 · ${w.len}글자`;
-    const boxes = w.cells.map(([r, c]) => (isFilled(key(r, c)) ? grid[r][c].letter : "□")).join(" ");
+    const boxes = w.cells.map(([r, c]) => {
+      const k = key(r, c);
+      return isFilled(k) ? grid[r][c].letter : (pending.get(k) || "□");
+    }).join(" ");
     let html = `<p class="word-meta">${DIR_KO[w.dir]} ${w.number}번 낱말</p>
       <p class="word-boxes">${boxes}</p>`;
     if (wordSolved(w.wi)) {
       html += `<p class="status-line">완성한 낱말이오. 판이나 목록에서 누르면 뜻풀이가 열리오.</p>`;
     } else {
-      html += `<p class="status-line">아직 뜻이 잠겨 있소. 글자를 채워 완성하시오.</p>`;
+      html += `<p class="status-line">글자를 올려 낱말을 짜 보시오. 칸이 다 차면 단어째 맞춰 보오.<br>올린 글자는 다시 누르면 보따리로 돌아가오.</p>`;
       if (defsUsed.has(w.wi)) {
         html += `<div class="def-peek"><b>뜻보기</b> — ${w.def}</div>`;
       }
@@ -1123,6 +1132,15 @@
     if (!cell) return;
     const k = key(r, c);
     const open = cell.words.filter((wi) => !wordSolved(wi));
+    // 임시로 놓아 둔 글자는 다시 누르면 보따리로 되돌린다
+    if (pending.has(k)) {
+      tray.push(pending.get(k));
+      pending.delete(k);
+      selWi = open.includes(selWi) ? selWi : (open.length ? open[0] : null);
+      selCell = k;
+      renderAll();
+      return;
+    }
     if (isFilled(k)) {
       if (!open.length) { openDefModal(cell.words); return; }
       selectWord(open[0]);
@@ -1147,79 +1165,88 @@
 
   function selectWord(wi) {
     selWi = wi;
-    selCell = firstEmptyOf(wi);
+    selCell = firstFreeOf(wi);
     refreshCells();
     renderClueLists();
     renderPanel();
     renderItems();
   }
 
-  function firstEmptyOf(wi) {
+  // 잠기지도 않고 임시 글자도 없는 첫 칸
+  function firstFreeOf(wi) {
     const w = puzzle.words[wi];
-    const found = w.cells.find(([r, c]) => !isFilled(key(r, c)));
+    const found = w.cells.find(([r, c]) => !isOccupied(key(r, c)));
     return found ? key(found[0], found[1]) : null;
   }
 
-  function nextEmptyAfter(wi, k) {
+  function nextFreeAfter(wi, k) {
     const w = puzzle.words[wi];
     const idx = w.cells.findIndex(([r, c]) => key(r, c) === k);
     for (let step = 1; step <= w.cells.length; step++) {
       const [r, c] = w.cells[(idx + step) % w.cells.length];
-      if (!isFilled(key(r, c))) return key(r, c);
+      if (!isOccupied(key(r, c))) return key(r, c);
     }
     return null;
   }
 
-  function placeLetter(k, viaHint) {
-    // k 칸을 정답 글자로 확정하고, 보따리에서 그 글자 하나를 뺀다
-    const [r, c] = k.split(",").map(Number);
-    const letter = grid[r][c].letter;
-    filled.add(k);
-    if (viaHint) hintCells.add(k);
-    const i = tray.indexOf(letter);
-    if (i > -1) tray.splice(i, 1);
-    const el = cellEls[k];
-    if (el) { el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); }
-    // 이 칸으로 완성된 낱말 알림
-    const completed = grid[r][c].words.filter((wi) => wordSolved(wi));
-    completed.forEach((wi) => {
-      toast(`옳거니! 「${puzzle.words[wi].answer}」 완성 — 누르면 뜻풀이가 열리오.`, "good");
-    });
-    // 다음 빈 칸으로 이동
-    if (selWi !== null && !wordSolved(selWi)) {
-      selCell = nextEmptyAfter(selWi, k) || firstEmptyOf(selWi);
-    } else {
-      selCell = null;
-      if (selWi !== null && wordSolved(selWi)) {
-        // 방금 낱말을 끝냈으면 교차하는 미완성 낱말로 자연스럽게 이동
-        const other = grid[r][c].words.find((wi) => !wordSolved(wi));
-        if (other !== undefined) { selWi = other; selCell = firstEmptyOf(other); }
+  /* 칸이 다 찬 낱말을 단어째 맞춰 본다: 맞으면 확정, 틀리면 글자를 보따리로 되돌림 */
+  function checkPendingWords() {
+    const beforeSolved = new Set(puzzle.words.filter((w) => wordSolved(w.wi)).map((w) => w.wi));
+    let changed = true, wrong = 0;
+    while (changed) {
+      changed = false;
+      for (const w of puzzle.words) {
+        if (wordSolved(w.wi)) continue;
+        const keys = w.cells.map(([r, c]) => key(r, c));
+        if (!keys.every((k) => isFilled(k) || pending.has(k))) continue;
+        const chars = [...w.answer];
+        const guess = keys.map((k, i) => (isFilled(k) ? chars[i] : pending.get(k))).join("");
+        if (guess === w.answer) {
+          keys.forEach((k) => { if (pending.has(k)) { pending.delete(k); filled.add(k); } });
+        } else {
+          keys.forEach((k) => { if (pending.has(k)) { tray.push(pending.get(k)); pending.delete(k); } });
+          const ps = pSave(cur);
+          ps.mistakes = (ps.mistakes || 0) + 1;
+          wrong++;
+          w.cells.forEach(([r, c]) => {
+            const el = cellEls[key(r, c)];
+            if (el) { el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake"); }
+          });
+        }
+        changed = true;
       }
     }
+    const newly = puzzle.words.filter((w) => !beforeSolved.has(w.wi) && wordSolved(w.wi));
+    if (newly.length) {
+      toast(`옳거니! ${newly.map((w) => `「${w.answer}」`).join(", ")} 완성 — 누르면 뜻풀이가 열리오.`, "good");
+    } else if (wrong) {
+      toast("짜 맞춘 낱말이 틀렸소. 글자가 보따리로 돌아갔소.", "bad");
+    }
     saveState();
-    renderAll();
-    checkFinish();
   }
 
   function onTileClick(idx) {
-    if (!selCell || isFilled(selCell)) {
+    if (!selCell || isOccupied(selCell)) {
       toast("먼저 판에서 빈 칸을 고르시오.");
       return;
     }
-    const letter = tray[idx];
-    const [r, c] = selCell.split(",").map(Number);
-    if (letter === grid[r][c].letter) {
-      placeLetter(selCell, false);
-    } else {
-      const ps = pSave(cur);
-      ps.mistakes = (ps.mistakes || 0) + 1;
-      persist();
-      const tileEl = trayEl.children[idx];
-      if (tileEl) { tileEl.classList.remove("shake"); void tileEl.offsetWidth; tileEl.classList.add("shake"); }
-      const cellEl = cellEls[selCell];
-      if (cellEl) { cellEl.classList.remove("shake"); void cellEl.offsetWidth; cellEl.classList.add("shake"); }
-      toast("이 칸의 글자가 아니오. 다시 헤아려 보시오.", "bad");
+    const placedKey = selCell;
+    pending.set(placedKey, tray[idx]);
+    tray.splice(idx, 1);
+    const el = cellEls[placedKey];
+    if (el) { el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); }
+    checkPendingWords();
+    // 커서 이동
+    if (selWi !== null && wordSolved(selWi)) {
+      const [r, c] = placedKey.split(",").map(Number);
+      const other = grid[r][c].words.find((wi) => !wordSolved(wi));
+      if (other !== undefined) { selWi = other; selCell = firstFreeOf(other); }
+      else { selWi = null; selCell = null; }
+    } else if (selWi !== null) {
+      selCell = nextFreeAfter(selWi, placedKey) || firstFreeOf(selWi);
     }
+    renderAll();
+    checkFinish();
   }
 
   function useHint() {
@@ -1227,11 +1254,31 @@
     if (ps.hints <= 0) return;
     let target = null;
     if (selCell && !isFilled(selCell)) target = selCell;
-    else if (selWi !== null && !wordSolved(selWi)) target = firstEmptyOf(selWi);
+    else if (selWi !== null && !wordSolved(selWi)) {
+      const w = puzzle.words[selWi];
+      const found = w.cells.find(([r, c]) => !isFilled(key(r, c)));
+      target = found ? key(found[0], found[1]) : null;
+    }
     if (!target) return;
     ps.hints -= 1;
+    // 임시 글자가 놓여 있으면 되돌리고 참 글자를 확정한다
+    if (pending.has(target)) { tray.push(pending.get(target)); pending.delete(target); }
+    const [r, c] = target.split(",").map(Number);
+    filled.add(target);
+    hintCells.add(target);
+    const i = tray.indexOf(grid[r][c].letter);
+    if (i > -1) tray.splice(i, 1);
+    const el = cellEls[target];
+    if (el) { el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); }
     toast("붓끝이 글자 한 자를 밝혔소.", "good");
-    placeLetter(target, true);
+    checkPendingWords();
+    if (selWi !== null && !wordSolved(selWi)) {
+      selCell = firstFreeOf(selWi);
+    } else {
+      selCell = null;
+    }
+    renderAll();
+    checkFinish();
   }
 
   function useDef() {
