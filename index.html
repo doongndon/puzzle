@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>낱말풀이 마당 — 한글 가로세로 퍼즐</title>
-<meta name="description" content="광고 없는 한글 가로세로 낱말 퍼즐. 한국 전통 한지 분위기의 무료 퍼즐 놀이.">
+<meta name="description" content="광고 없는 한글 가로세로 낱말 퍼즐. 글자를 골라 채우는 한국 전통 한지 분위기의 무료 퍼즐 놀이.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap" rel="stylesheet">
@@ -81,7 +81,6 @@
     color: var(--ink);
     text-shadow: 0 1px 0 rgba(255,255,255,.4);
   }
-  h1.title .dot { color: var(--red); }
   .subtitle {
     margin-top: 6px;
     font-size: clamp(13px, 2.4vw, 16px);
@@ -142,11 +141,11 @@
 
   /* ── 본문 배치 ───────────────────────── */
   .layout { display: flex; gap: 26px; align-items: flex-start; }
-  .board-wrap { flex: 0 1 auto; }
+  .board-wrap { flex: 0 1 auto; display: flex; flex-direction: column; gap: 14px; }
   .side { flex: 1 1 300px; min-width: 280px; display: flex; flex-direction: column; gap: 16px; }
   @media (max-width: 860px) {
     .layout { flex-direction: column; align-items: stretch; }
-    .board-wrap { display: flex; justify-content: center; }
+    .board-wrap { align-items: center; }
     .side { min-width: 0; }
   }
 
@@ -191,7 +190,6 @@
   }
   .cell.hl { background: var(--hl); }
   .cell.cursor { background: var(--hl-strong); box-shadow: inset 0 0 0 2px var(--red); }
-  .cell.solved-cell { color: var(--ink); }
   .cell .letter { transform: translateY(1px); }
   .cell.pop .letter { animation: pop .35s ease; }
   @keyframes pop {
@@ -200,6 +198,45 @@
     100% { transform: scale(1); opacity: 1; }
   }
   .cell.hint-cell .letter { color: var(--blue); }
+  .cell.seed-cell .letter { color: var(--ink-soft); }
+
+  /* ── 글자 보따리 ─────────────────────── */
+  .tray-panel {
+    width: min(92vw, 520px);
+    background: rgba(255,252,242,.55);
+    border: 1px solid #c5ad80;
+    border-radius: 5px;
+    padding: 12px 14px;
+    box-shadow: inset 0 0 18px rgba(160,120,60,.08);
+  }
+  .tray-panel h2 {
+    font-size: 15px;
+    letter-spacing: .2em;
+    color: var(--red-deep);
+    margin-bottom: 9px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .tray-panel h2 .small { font-size: 12px; color: var(--ink-faint); letter-spacing: .05em; }
+  .tray { display: flex; flex-wrap: wrap; gap: 7px; min-height: 44px; }
+  .tile {
+    width: 42px; height: 42px;
+    font-family: inherit;
+    font-size: 21px; font-weight: 700;
+    color: var(--ink);
+    background:
+      linear-gradient(#fbf5e4, #ecdfbe);
+    border: 1px solid #a98f5f;
+    border-bottom-width: 3px;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0,0,0,.18);
+    transition: transform .1s ease, box-shadow .1s ease;
+    padding-top: 2px;
+  }
+  .tile:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,.2); }
+  .tile:active { transform: translateY(0); }
+  .tile.shake { animation: shake .4s ease; }
+  .tray .all-done { font-size: 14px; color: var(--ink-faint); letter-spacing: .1em; align-self: center; }
 
   /* ── 곁상(우측 패널) ───────────────────── */
   .panel {
@@ -224,7 +261,11 @@
     font-size: 13px; color: var(--blue);
     letter-spacing: .12em; margin-bottom: 6px;
   }
-  .clue-current .clue-text { font-size: 16px; line-height: 1.65; }
+  .clue-current .word-boxes {
+    font-size: 22px; letter-spacing: .3em; color: var(--ink);
+    margin: 4px 0 2px;
+  }
+  .clue-current .status-line { font-size: 14px; color: var(--ink-soft); line-height: 1.65; margin-top: 6px; }
   .clue-current .def-peek {
     margin-top: 10px; padding: 10px 12px;
     background: rgba(51,83,140,.08);
@@ -235,19 +276,6 @@
   .clue-current .def-peek b { color: var(--blue); }
   .clue-current .placeholder { color: var(--ink-faint); font-size: 15px; line-height: 1.7; }
 
-  .answer-row { display: flex; gap: 8px; margin-top: 12px; }
-  .answer-row[hidden] { display: none; }
-  .answer-row input {
-    flex: 1; min-width: 0;
-    font-family: inherit; font-size: 18px;
-    padding: 9px 12px;
-    color: var(--ink);
-    background: #fffcf3;
-    border: 1px solid #b9a175;
-    border-radius: 4px;
-    letter-spacing: .2em;
-  }
-  .answer-row input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
   .btn {
     font-family: inherit; font-size: 15px;
     padding: 9px 16px;
@@ -306,7 +334,7 @@
   .item-btn .label small { display: block; font-size: 11px; color: var(--ink-faint); }
   .item-btn .count { font-size: 17px; font-weight: 700; color: var(--red-deep); font-family: "Nanum Myeongjo", serif; }
 
-  /* ── 열쇠 목록 ───────────────────────── */
+  /* ── 낱말 목록 ───────────────────────── */
   .clues { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 18px; }
   @media (max-width: 480px) { .clues { grid-template-columns: 1fr; } }
   .clues h3 {
@@ -315,11 +343,11 @@
   }
   .clues ol { list-style: none; }
   .clues li {
-    font-size: 13.5px; line-height: 1.55;
+    font-size: 14px; line-height: 1.55;
     padding: 5px 6px 5px 4px;
     border-radius: 3px;
     cursor: pointer;
-    display: flex; gap: 7px;
+    display: flex; gap: 7px; align-items: center;
     color: var(--ink-soft);
   }
   .clues li:hover { background: rgba(185,139,63,.14); }
@@ -329,15 +357,15 @@
     color: var(--red); font-weight: 700;
     font-family: "Nanum Myeongjo", serif;
   }
-  .clues li.done { color: #9d8a6e; }
-  .clues li.done .ctext { text-decoration: line-through; text-decoration-color: rgba(166,60,50,.6); text-decoration-thickness: 1.5px; }
+  .clues li .boxes { letter-spacing: .12em; }
+  .clues li.done { color: var(--ink); }
   .clues li.done .cnum { color: #b08c8a; }
-  .clues li.done::after { content: "뜻"; flex: none; align-self: center; font-size: 10px; color: #f6ecd8; background: var(--green); border-radius: 3px; padding: 1px 4px; }
+  .clues li.done::after { content: "뜻"; flex: none; margin-left: auto; font-size: 10px; color: #f6ecd8; background: var(--green); border-radius: 3px; padding: 1px 4px; }
 
   .progress-line {
     display: flex; align-items: center; justify-content: space-between;
     font-size: 13px; color: var(--ink-soft); letter-spacing: .08em;
-    margin-bottom: 8px;
+    width: min(92vw, 520px);
   }
   .progress-line .bar {
     flex: 1; height: 7px; margin: 0 10px;
@@ -395,6 +423,11 @@
     display: inline-block; font-size: 12px; color: #f6ecd8;
     background: var(--green); padding: 2px 10px; border-radius: 3px;
     letter-spacing: .3em; text-indent: .3em; margin-bottom: 10px;
+  }
+  .scroll-card .dict-link {
+    display: inline-block; margin-top: 12px;
+    font-size: 13px; color: var(--blue);
+    text-decoration: underline; text-underline-offset: 3px;
   }
   .scroll-card .close-row { margin-top: 22px; }
   .scroll-card .extra-def + .extra-def { margin-top: 20px; border-top: 1px dashed #c5ad80; padding-top: 18px; }
@@ -463,51 +496,49 @@
 
       <div class="layout">
         <div class="board-wrap">
-          <div>
-            <div class="progress-line">
-              <span id="progressLabel">풀이 0 / 0</span>
-              <span class="bar"><i id="progressBar"></i></span>
-              <span id="themeLabel"></span>
-            </div>
-            <div class="board" id="board" role="grid" aria-label="낱말판"></div>
+          <div class="progress-line">
+            <span id="progressLabel">풀이 0 / 0</span>
+            <span class="bar"><i id="progressBar"></i></span>
+            <span id="themeLabel"></span>
           </div>
+          <div class="board" id="board" role="grid" aria-label="낱말판"></div>
+          <section class="tray-panel">
+            <h2>글자 보따리 <span class="small">빈 칸을 고른 뒤 글자를 누르시오</span></h2>
+            <div class="tray" id="tray"></div>
+          </section>
         </div>
 
         <aside class="side">
           <section class="panel clue-current">
-            <h2>지금 열쇠 <span class="small" id="selMeta"></span></h2>
-            <div id="clueBox"><p class="placeholder">낱말판의 칸이나 아래 열쇠 목록을 눌러<br>풀고 싶은 낱말을 고르시오.</p></div>
-            <div class="answer-row" id="answerRow" hidden>
-              <input type="text" id="answerInput" autocomplete="off" spellcheck="false" placeholder="정답을 적으시오">
-              <button class="btn" id="submitBtn">확인</button>
-            </div>
+            <h2>지금 낱말 <span class="small" id="selMeta"></span></h2>
+            <div id="clueBox"><p class="placeholder">판의 빈 칸을 누르고, 글자 보따리에서<br>알맞은 글자를 골라 낱말을 완성하시오.<br>낱말을 완성하면 뜻풀이가 열리오.</p></div>
           </section>
 
           <section class="panel">
             <h2>보물 주머니 <span class="small">아껴 쓰시오</span></h2>
             <div class="items-row">
-              <button class="item-btn" id="hintBtn" title="고른 낱말의 글자 한 자를 밝혀 줍니다">
+              <button class="item-btn" id="hintBtn" title="고른 빈 칸의 글자를 밝혀 줍니다">
                 <span class="coin"></span>
-                <span class="label">힌트<small>글자 한 자 밝히기</small></span>
+                <span class="label">힌트<small>빈 칸 글자 밝히기</small></span>
                 <span class="count" id="hintCount">3</span>
               </button>
               <button class="item-btn" id="defBtn" title="고른 낱말의 사전 뜻풀이를 미리 보여 줍니다">
                 <span class="coin"></span>
                 <span class="label">뜻보기<small>뜻풀이 미리 보기</small></span>
-                <span class="count" id="defCount">2</span>
+                <span class="count" id="defCount">3</span>
               </button>
             </div>
           </section>
 
           <section class="panel">
-            <h2>열쇠 목록 <span class="small">푼 낱말을 누르면 뜻풀이</span></h2>
+            <h2>낱말 목록 <span class="small">완성한 낱말을 누르면 뜻풀이</span></h2>
             <div class="clues">
               <div>
-                <h3>가로 열쇠</h3>
+                <h3>가로</h3>
                 <ol id="acrossList"></ol>
               </div>
               <div>
-                <h3>세로 열쇠</h3>
+                <h3>세로</h3>
                 <ol id="downList"></ol>
               </div>
             </div>
@@ -517,7 +548,7 @@
         </aside>
       </div>
 
-      <p class="foot-note">광고 없이 즐기는 우리말 놀이 · 낱말을 맞히면 뜻풀이가 열립니다</p>
+      <p class="foot-note">광고 없이 즐기는 우리말 놀이 · 낱말을 완성하면 뜻풀이가 열립니다</p>
     </div>
     <div class="dancheong bottom"></div>
   </div>
@@ -538,16 +569,38 @@
   <script>
   "use strict";
   /* ================================================================
-     낱말풀이 마당 — 앱 본체
+     낱말풀이 마당 — 앱 본체 (글자 채우기 방식)
+     - 판에 씨앗 글자가 드문드문 놓여 있고,
+     - 글자 보따리에서 글자를 골라 빈 칸을 채워 낱말을 완성한다.
+     - 완성한 낱말을 누르면 뜻풀이가 열린다. (열쇠/뜻은 처음에 비공개)
      ================================================================ */
   const HINTS_PER_PUZZLE = 3;
-  const DEFS_PER_PUZZLE = 2;
-  const SAVE_KEY = "hanji-crossword-v1";
+  const DEFS_PER_PUZZLE = 3;
+  const SEED_RATIO = 0.38;      // 처음에 밝혀 둘 글자 비율
+  const SAVE_KEY = "hanji-crossword-v2";
   const DIR_KO = { across: "가로", down: "세로" };
 
   const $ = (id) => document.getElementById(id);
   const boardEl = $("board");
-  const answerInput = $("answerInput");
+  const trayEl = $("tray");
+  const key = (r, c) => r + "," + c;
+
+  /* ── 결정적 난수 (새로고침해도 같은 배치) ── */
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function shuffle(arr, rng) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
 
   /* ── 저장/불러오기 ── */
   let save;
@@ -561,7 +614,7 @@
   }
   function pSave(i) {
     if (!save.puzzles[i]) {
-      save.puzzles[i] = { solved: [], filled: [], hintCells: [], hints: HINTS_PER_PUZZLE, defs: DEFS_PER_PUZZLE, defsUsed: [] };
+      save.puzzles[i] = { filled: [], hintCells: [], hints: HINTS_PER_PUZZLE, defs: DEFS_PER_PUZZLE, defsUsed: [], mistakes: 0 };
     }
     return save.puzzles[i];
   }
@@ -573,6 +626,7 @@
     p.words.forEach((w, wi) => {
       const chars = [...w.answer];
       w.wi = wi;
+      w.len = chars.length;
       w.cells = [];
       chars.forEach((ch, k) => {
         const r = w.row + (w.dir === "down" ? k : 0);
@@ -599,29 +653,82 @@
     return grid;
   }
 
+  /* ── 씨앗 글자 고르기: 낱말마다 한 자쯤 밝히되, 어떤 낱말도 통째로 드러나지 않게 ── */
+  function computeSeeds(p, grid, pi) {
+    const rng = mulberry32(0x5EED + pi * 7919);
+    const seeds = new Set();
+    const canSeed = (r, c) =>
+      !seeds.has(key(r, c)) &&
+      grid[r][c].words.every((wi) => {
+        const w = p.words[wi];
+        const hidden = w.cells.filter(([rr, cc]) => !seeds.has(key(rr, cc))).length;
+        return hidden - 1 >= 1; // 이 칸을 밝혀도 숨은 글자가 남는가
+      });
+    // 1단계: 낱말마다 최소 한 글자
+    p.words.forEach((w) => {
+      if (w.cells.some(([r, c]) => seeds.has(key(r, c)))) return;
+      const cand = shuffle(w.cells.slice(), rng).find(([r, c]) => canSeed(r, c));
+      if (cand) seeds.add(key(cand[0], cand[1]));
+    });
+    // 2단계: 목표 비율까지 채우기
+    const all = [];
+    for (let r = 0; r < p.size; r++)
+      for (let c = 0; c < p.size; c++)
+        if (grid[r][c]) all.push([r, c]);
+    const target = Math.round(all.length * SEED_RATIO);
+    shuffle(all, rng).forEach(([r, c]) => {
+      if (seeds.size >= target) return;
+      if (canSeed(r, c)) seeds.add(key(r, c));
+    });
+    return seeds;
+  }
+
   /* ── 실행 상태 ── */
   let cur = Math.min(Math.max(save.current, 0), PUZZLES.length - 1);
-  let puzzle, grid;
-  let solved, filled, hintCells, defsUsed; // Set
-  let selectedWi = null;
+  let puzzle, grid, seeds;
+  let filled, hintCells, defsUsed; // Set
+  let tray = [];                   // 남은 글자들 (순서 유지)
+  let selCell = null;              // 고른 빈 칸 key
+  let selWi = null;                // 고른 낱말
   let cellEls = {};
 
-  const key = (r, c) => r + "," + c;
+  const isFilled = (k) => seeds.has(k) || filled.has(k);
+  const wordSolved = (wi) => puzzle.words[wi].cells.every(([r, c]) => isFilled(key(r, c)));
+  const solvedCount = () => puzzle.words.reduce((n, w) => n + (wordSolved(w.wi) ? 1 : 0), 0);
+
+  function computeTray() {
+    const rng = mulberry32(0x7AA9 + cur * 104729);
+    const letters = [];
+    for (let r = 0; r < puzzle.size; r++)
+      for (let c = 0; c < puzzle.size; c++)
+        if (grid[r][c] && !seeds.has(key(r, c))) letters.push(grid[r][c].letter);
+    shuffle(letters, rng);
+    // 이미 놓은 글자는 보따리에서 뺀다
+    filled.forEach((k) => {
+      const [r, c] = k.split(",").map(Number);
+      const i = letters.indexOf(grid[r][c].letter);
+      if (i > -1) letters.splice(i, 1);
+    });
+    return letters;
+  }
 
   function loadPuzzle(i) {
     cur = i;
     save.current = i;
     puzzle = PUZZLES[i];
     grid = buildModel(puzzle);
+    seeds = computeSeeds(puzzle, grid, i);
     const ps = pSave(i);
-    solved = new Set(ps.solved);
     filled = new Set(ps.filled);
     hintCells = new Set(ps.hintCells);
     defsUsed = new Set(ps.defsUsed);
-    selectedWi = null;
+    tray = computeTray();
+    selCell = null;
+    selWi = null;
     persist();
     renderTabs();
     renderBoard();
+    renderTray();
     renderClueLists();
     renderPanel();
     renderItems();
@@ -630,7 +737,6 @@
 
   function saveState() {
     const ps = pSave(cur);
-    ps.solved = [...solved];
     ps.filled = [...filled];
     ps.hintCells = [...hintCells];
     ps.defsUsed = [...defsUsed];
@@ -642,15 +748,15 @@
     const nav = $("madangTabs");
     nav.innerHTML = "";
     PUZZLES.forEach((p, i) => {
-      const ps = save.puzzles[i];
-      const done = ps && ps.solved.length === p.words.length;
       const b = document.createElement("button");
+      const done = i === cur
+        ? solvedCount() === puzzle.words.length
+        : (save.puzzles[i] && save.puzzles[i].done);
       b.innerHTML = `${p.name} · ${p.theme}${done ? ' <span class="done-mark">完</span>' : ""}`;
       if (i === cur) b.classList.add("active");
       b.addEventListener("click", () => loadPuzzle(i));
       nav.appendChild(b);
     });
-    $("themeLabel").textContent = puzzle ? puzzle.theme : "";
   }
 
   function renderBoard() {
@@ -683,8 +789,8 @@
 
   function refreshCells() {
     const selCells = new Set();
-    if (selectedWi !== null) {
-      puzzle.words[selectedWi].cells.forEach(([r, c]) => selCells.add(key(r, c)));
+    if (selWi !== null) {
+      puzzle.words[selWi].cells.forEach(([r, c]) => selCells.add(key(r, c)));
     }
     for (let r = 0; r < puzzle.size; r++) {
       for (let c = 0; c < puzzle.size; c++) {
@@ -693,67 +799,72 @@
         const k = key(r, c);
         const el = cellEls[k];
         el.classList.toggle("hl", selCells.has(k));
-        el.classList.toggle("hint-cell", hintCells.has(k) && !cell.words.some((wi) => solved.has(wi)));
-        el.querySelector(".letter").textContent = filled.has(k) ? cell.letter : "";
+        el.classList.toggle("cursor", selCell === k);
+        el.classList.toggle("seed-cell", seeds.has(k));
+        el.classList.toggle("hint-cell", hintCells.has(k));
+        el.querySelector(".letter").textContent = isFilled(k) ? cell.letter : "";
       }
     }
   }
 
+  function renderTray() {
+    trayEl.innerHTML = "";
+    if (!tray.length) {
+      trayEl.innerHTML = '<span class="all-done">보따리가 비었소 — 모든 글자를 놓았소!</span>';
+      return;
+    }
+    tray.forEach((letter, idx) => {
+      const b = document.createElement("button");
+      b.className = "tile";
+      b.textContent = letter;
+      b.addEventListener("click", () => onTileClick(idx));
+      trayEl.appendChild(b);
+    });
+  }
+
   function renderClueLists() {
     const byNumber = (a, b) => a.number - b.number;
-    const across = puzzle.words.filter((w) => w.dir === "across").sort(byNumber);
-    const down = puzzle.words.filter((w) => w.dir === "down").sort(byNumber);
     const fill = (listEl, words) => {
       listEl.innerHTML = "";
       words.forEach((w) => {
+        const done = wordSolved(w.wi);
         const li = document.createElement("li");
         li.dataset.wi = w.wi;
-        li.classList.toggle("done", solved.has(w.wi));
-        li.classList.toggle("sel", selectedWi === w.wi);
-        li.innerHTML = `<span class="cnum">${w.number}</span><span class="ctext">${w.clue} <span style="color:var(--ink-faint)">(${[...w.answer].length}글자)</span></span>`;
+        li.classList.toggle("done", done);
+        li.classList.toggle("sel", selWi === w.wi);
+        const body = done ? w.answer : "□".repeat(w.len) + ` <span style="color:var(--ink-faint);font-size:12px;">${w.len}글자</span>`;
+        li.innerHTML = `<span class="cnum">${w.number}</span><span class="boxes">${body}</span>`;
         li.addEventListener("click", () => {
-          if (solved.has(w.wi)) openDefModal([w.wi]);
+          if (wordSolved(w.wi)) openDefModal([w.wi]);
           else selectWord(w.wi);
         });
         listEl.appendChild(li);
       });
     };
-    fill($("acrossList"), across);
-    fill($("downList"), down);
-  }
-
-  function renderClueListState() {
-    document.querySelectorAll(".clues li").forEach((li) => {
-      const wi = Number(li.dataset.wi);
-      li.classList.toggle("done", solved.has(wi));
-      li.classList.toggle("sel", selectedWi === wi);
-    });
+    fill($("acrossList"), puzzle.words.filter((w) => w.dir === "across").sort(byNumber));
+    fill($("downList"), puzzle.words.filter((w) => w.dir === "down").sort(byNumber));
   }
 
   function renderPanel() {
     const box = $("clueBox");
-    const row = $("answerRow");
     const meta = $("selMeta");
-    if (selectedWi === null) {
-      box.innerHTML = '<p class="placeholder">낱말판의 칸이나 아래 열쇠 목록을 눌러<br>풀고 싶은 낱말을 고르시오.</p>';
-      row.hidden = true;
+    if (selWi === null) {
+      box.innerHTML = '<p class="placeholder">판의 빈 칸을 누르고, 글자 보따리에서<br>알맞은 글자를 골라 낱말을 완성하시오.<br>낱말을 완성하면 뜻풀이가 열리오.</p>';
       meta.textContent = "";
       return;
     }
-    const w = puzzle.words[selectedWi];
-    const len = [...w.answer].length;
-    meta.textContent = `${DIR_KO[w.dir]} ${w.number}번 · ${len}글자`;
-    let html = `<p class="word-meta">${DIR_KO[w.dir]} ${w.number}번 열쇠</p><p class="clue-text">${w.clue}</p>`;
-    if (solved.has(w.wi)) {
-      html += `<div class="def-peek"><b>뜻풀이</b> — ${w.def}</div>`;
-      row.hidden = true;
+    const w = puzzle.words[selWi];
+    meta.textContent = `${DIR_KO[w.dir]} ${w.number}번 · ${w.len}글자`;
+    const boxes = w.cells.map(([r, c]) => (isFilled(key(r, c)) ? grid[r][c].letter : "□")).join(" ");
+    let html = `<p class="word-meta">${DIR_KO[w.dir]} ${w.number}번 낱말</p>
+      <p class="word-boxes">${boxes}</p>`;
+    if (wordSolved(w.wi)) {
+      html += `<p class="status-line">완성한 낱말이오. 판이나 목록에서 누르면 뜻풀이가 열리오.</p>`;
     } else {
+      html += `<p class="status-line">아직 뜻이 잠겨 있소. 글자를 채워 완성하시오.</p>`;
       if (defsUsed.has(w.wi)) {
         html += `<div class="def-peek"><b>뜻보기</b> — ${w.def}</div>`;
       }
-      row.hidden = false;
-      answerInput.value = "";
-      answerInput.placeholder = `${len}글자 정답을 적으시오`;
     }
     box.innerHTML = html;
   }
@@ -762,133 +873,151 @@
     const ps = pSave(cur);
     $("hintCount").textContent = ps.hints;
     $("defCount").textContent = ps.defs;
-    const w = selectedWi !== null ? puzzle.words[selectedWi] : null;
-    const wordOpen = w && !solved.has(w.wi);
-    $("hintBtn").disabled = !wordOpen || ps.hints <= 0 || w.cells.every(([r, c]) => filled.has(key(r, c)));
-    $("defBtn").disabled = !wordOpen || defsUsed.has(w && w.wi) || ps.defs <= 0;
-    if (w && wordOpen && defsUsed.has(w.wi)) $("defBtn").disabled = true;
+    const emptySelected = selCell !== null && !isFilled(selCell);
+    const wordOpen = selWi !== null && !wordSolved(selWi);
+    $("hintBtn").disabled = ps.hints <= 0 || !(emptySelected || wordOpen);
+    $("defBtn").disabled = ps.defs <= 0 || !wordOpen || defsUsed.has(selWi);
   }
 
   function renderProgress() {
     const total = puzzle.words.length;
-    const done = solved.size;
+    const done = solvedCount();
     $("progressLabel").textContent = `풀이 ${done} / ${total}`;
     $("progressBar").style.width = (total ? (done / total) * 100 : 0) + "%";
     $("themeLabel").textContent = puzzle.theme;
+  }
+
+  function renderAll() {
+    refreshCells();
+    renderTray();
+    renderClueLists();
+    renderPanel();
+    renderItems();
+    renderProgress();
   }
 
   /* ── 상호작용 ── */
   function onCellClick(r, c) {
     const cell = grid[r][c];
     if (!cell) return;
-    const open = cell.words.filter((wi) => !solved.has(wi));
-    if (open.length === 0) {
-      openDefModal(cell.words);
+    const k = key(r, c);
+    const open = cell.words.filter((wi) => !wordSolved(wi));
+    if (isFilled(k)) {
+      if (!open.length) { openDefModal(cell.words); return; }
+      selectWord(open[0]);
       return;
     }
-    let next;
-    const idx = open.indexOf(selectedWi);
-    if (idx !== -1 && open.length > 1) next = open[(idx + 1) % open.length];
-    else next = open[0];
-    selectWord(next, key(r, c));
-  }
-
-  function selectWord(wi, cursorKey) {
-    selectedWi = wi;
+    // 빈 칸: 같은 칸을 다시 누르면 가로/세로 낱말 전환
+    let wi;
+    if (selCell === k && open.length > 1) {
+      wi = open[(open.indexOf(selWi) + 1) % open.length];
+    } else if (open.includes(selWi) && cell.words.includes(selWi)) {
+      wi = selWi;
+    } else {
+      wi = open[0];
+    }
+    selCell = k;
+    selWi = wi;
     refreshCells();
-    document.querySelectorAll(".cell.cursor").forEach((el) => el.classList.remove("cursor"));
-    if (cursorKey && cellEls[cursorKey]) cellEls[cursorKey].classList.add("cursor");
-    renderClueListState();
+    renderClueLists();
     renderPanel();
     renderItems();
-    if (!solved.has(wi) && window.matchMedia("(min-width: 861px)").matches) {
-      answerInput.focus();
-    }
   }
 
-  function submitAnswer() {
-    if (selectedWi === null) return;
-    const w = puzzle.words[selectedWi];
-    if (solved.has(w.wi)) return;
-    const guess = answerInput.value.replace(/\s+/g, "");
-    if (!guess) { answerInput.focus(); return; }
-    if (guess === w.answer) {
-      solveWord(w.wi, true);
-    } else {
-      answerInput.parentElement.classList.remove("shake");
-      void answerInput.parentElement.offsetWidth;
-      answerInput.parentElement.classList.add("shake");
-      toast("아직 아니오. 다시 헤아려 보시오.", "bad");
-      answerInput.select();
-    }
+  function selectWord(wi) {
+    selWi = wi;
+    selCell = firstEmptyOf(wi);
+    refreshCells();
+    renderClueLists();
+    renderPanel();
+    renderItems();
   }
 
-  function solveWord(wi, announce) {
+  function firstEmptyOf(wi) {
     const w = puzzle.words[wi];
-    solved.add(wi);
-    w.cells.forEach(([r, c]) => {
-      const k = key(r, c);
-      if (!filled.has(k)) {
-        filled.add(k);
-        const el = cellEls[k];
-        if (el) { el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); }
-      }
+    const found = w.cells.find(([r, c]) => !isFilled(key(r, c)));
+    return found ? key(found[0], found[1]) : null;
+  }
+
+  function nextEmptyAfter(wi, k) {
+    const w = puzzle.words[wi];
+    const idx = w.cells.findIndex(([r, c]) => key(r, c) === k);
+    for (let step = 1; step <= w.cells.length; step++) {
+      const [r, c] = w.cells[(idx + step) % w.cells.length];
+      if (!isFilled(key(r, c))) return key(r, c);
+    }
+    return null;
+  }
+
+  function placeLetter(k, viaHint) {
+    // k 칸을 정답 글자로 확정하고, 보따리에서 그 글자 하나를 뺀다
+    const [r, c] = k.split(",").map(Number);
+    const letter = grid[r][c].letter;
+    filled.add(k);
+    if (viaHint) hintCells.add(k);
+    const i = tray.indexOf(letter);
+    if (i > -1) tray.splice(i, 1);
+    const el = cellEls[k];
+    if (el) { el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); }
+    // 이 칸으로 완성된 낱말 알림
+    const completed = grid[r][c].words.filter((wi) => wordSolved(wi));
+    completed.forEach((wi) => {
+      toast(`옳거니! 「${puzzle.words[wi].answer}」 완성 — 누르면 뜻풀이가 열리오.`, "good");
     });
-    if (announce) toast(`옳거니! 「${w.answer}」 — 낱말을 누르면 뜻풀이가 열리오.`, "good");
-    // 교차로 모든 글자가 드러난 낱말은 자동으로 풀이 처리
-    let chained = true;
-    while (chained) {
-      chained = false;
-      puzzle.words.forEach((other) => {
-        if (!solved.has(other.wi) && other.cells.every(([r, c]) => filled.has(key(r, c)))) {
-          solved.add(other.wi);
-          chained = true;
-          toast(`엮인 낱말 「${other.answer}」도 절로 풀렸소!`, "good");
-        }
-      });
+    // 다음 빈 칸으로 이동
+    if (selWi !== null && !wordSolved(selWi)) {
+      selCell = nextEmptyAfter(selWi, k) || firstEmptyOf(selWi);
+    } else {
+      selCell = null;
+      if (selWi !== null && wordSolved(selWi)) {
+        // 방금 낱말을 끝냈으면 교차하는 미완성 낱말로 자연스럽게 이동
+        const other = grid[r][c].words.find((wi) => !wordSolved(wi));
+        if (other !== undefined) { selWi = other; selCell = firstEmptyOf(other); }
+      }
     }
     saveState();
-    refreshCells();
-    renderClueListState();
-    renderPanel();
-    renderItems();
-    renderProgress();
-    renderTabs();
+    renderAll();
     checkFinish();
   }
 
-  function useHint() {
-    if (selectedWi === null) return;
-    const w = puzzle.words[selectedWi];
-    const ps = pSave(cur);
-    if (solved.has(w.wi) || ps.hints <= 0) return;
-    const target = w.cells.find(([r, c]) => !filled.has(key(r, c)));
-    if (!target) return;
-    ps.hints -= 1;
-    const k = key(target[0], target[1]);
-    filled.add(k);
-    hintCells.add(k);
-    const el = cellEls[k];
-    if (el) { el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); }
-    toast("붓끝이 글자 한 자를 밝혔소.", "good");
-    // 힌트만으로 낱말이 다 드러났으면 풀이 처리
-    if (w.cells.every(([r, c]) => filled.has(key(r, c)))) {
-      solveWord(w.wi, false);
-      toast(`「${w.answer}」 낱말이 모두 드러났소!`, "good");
+  function onTileClick(idx) {
+    if (!selCell || isFilled(selCell)) {
+      toast("먼저 판에서 빈 칸을 고르시오.");
+      return;
+    }
+    const letter = tray[idx];
+    const [r, c] = selCell.split(",").map(Number);
+    if (letter === grid[r][c].letter) {
+      placeLetter(selCell, false);
     } else {
-      saveState();
-      refreshCells();
-      renderItems();
+      const ps = pSave(cur);
+      ps.mistakes = (ps.mistakes || 0) + 1;
+      persist();
+      const tileEl = trayEl.children[idx];
+      if (tileEl) { tileEl.classList.remove("shake"); void tileEl.offsetWidth; tileEl.classList.add("shake"); }
+      const cellEl = cellEls[selCell];
+      if (cellEl) { cellEl.classList.remove("shake"); void cellEl.offsetWidth; cellEl.classList.add("shake"); }
+      toast("이 칸의 글자가 아니오. 다시 헤아려 보시오.", "bad");
     }
   }
 
-  function useDef() {
-    if (selectedWi === null) return;
-    const w = puzzle.words[selectedWi];
+  function useHint() {
     const ps = pSave(cur);
-    if (solved.has(w.wi) || defsUsed.has(w.wi) || ps.defs <= 0) return;
+    if (ps.hints <= 0) return;
+    let target = null;
+    if (selCell && !isFilled(selCell)) target = selCell;
+    else if (selWi !== null && !wordSolved(selWi)) target = firstEmptyOf(selWi);
+    if (!target) return;
+    ps.hints -= 1;
+    toast("붓끝이 글자 한 자를 밝혔소.", "good");
+    placeLetter(target, true);
+  }
+
+  function useDef() {
+    const ps = pSave(cur);
+    if (selWi === null || wordSolved(selWi) || defsUsed.has(selWi) || ps.defs <= 0) return;
     ps.defs -= 1;
-    defsUsed.add(w.wi);
+    defsUsed.add(selWi);
     saveState();
     renderPanel();
     renderItems();
@@ -898,7 +1027,7 @@
   /* ── 뜻풀이 두루마리 ── */
   function openDefModal(wis) {
     const card = $("defCard");
-    const solvedWis = wis.filter((wi) => solved.has(wi));
+    const solvedWis = wis.filter((wi) => wordSolved(wi));
     if (!solvedWis.length) return;
     card.innerHTML = solvedWis.map((wi) => {
       const w = puzzle.words[wi];
@@ -908,6 +1037,8 @@
         <p class="word-title">${w.answer}</p>
         <div class="brush-line"></div>
         <p class="def-text">${w.def}</p>
+        <a class="dict-link" target="_blank" rel="noopener"
+           href="https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=${encodeURIComponent(w.answer)}">표준국어대사전에서 찾아보기 ↗</a>
       </div>`;
     }).join("") + `<div class="close-row"><button class="btn" id="defClose">닫기</button></div>`;
     $("defVeil").classList.add("show");
@@ -917,19 +1048,22 @@
 
   /* ── 완성 ── */
   function checkFinish() {
-    if (solved.size !== puzzle.words.length) return;
+    if (solvedCount() !== puzzle.words.length) return;
     const ps = pSave(cur);
+    ps.done = true;
+    persist();
     const usedHints = HINTS_PER_PUZZLE - ps.hints;
     const usedDefs = DEFS_PER_PUZZLE - ps.defs;
+    const mistakes = ps.mistakes || 0;
     const hasNext = cur < PUZZLES.length - 1;
     setTimeout(() => {
       const card = $("finishCard");
       card.innerHTML = `
         <div class="big-seal">完</div>
         <h2>장원 급제!</h2>
-        <p>「${puzzle.name} · ${puzzle.theme}」의 낱말 ${puzzle.words.length}개를<br>모두 풀어내셨소.<br>
-        힌트 <span class="stat">${usedHints}</span>번, 뜻보기 <span class="stat">${usedDefs}</span>번을 쓰셨소.</p>
-        <p style="font-size:13px;color:var(--ink-faint);">푼 낱말을 누르면 언제든 뜻풀이를 볼 수 있소.</p>
+        <p>「${puzzle.name} · ${puzzle.theme}」의 낱말 ${puzzle.words.length}개를<br>모두 완성하셨소.<br>
+        힌트 <span class="stat">${usedHints}</span>번, 뜻보기 <span class="stat">${usedDefs}</span>번, 헛짚기 <span class="stat">${mistakes}</span>번.</p>
+        <p style="font-size:13px;color:var(--ink-faint);">완성한 낱말을 누르면 언제든 뜻풀이를 볼 수 있소.</p>
         <div class="close-row">
           ${hasNext ? '<button class="btn" id="nextMadang">다음 마당으로</button>' : ""}
           <button class="btn ghost" id="finishClose">판 구경하기</button>
@@ -954,10 +1088,6 @@
   }
 
   /* ── 이벤트 연결 ── */
-  $("submitBtn").addEventListener("click", submitAnswer);
-  answerInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.isComposing) submitAnswer();
-  });
   $("hintBtn").addEventListener("click", useHint);
   $("defBtn").addEventListener("click", useDef);
   $("resetBtn").addEventListener("click", () => {
@@ -974,6 +1104,15 @@
 
   /* ── 시작 ── */
   loadPuzzle(cur);
+
+  /* 자동 시험용 (게임에는 영향 없음) */
+  window.__debug = {
+    letterAt: (r, c) => (grid[r][c] ? grid[r][c].letter : null),
+    isSeed: (r, c) => seeds.has(key(r, c)),
+    isFilled: (r, c) => isFilled(key(r, c)),
+    trayLetters: () => tray.slice(),
+    solvedCount,
+  };
   </script>
 </body>
 </html>
