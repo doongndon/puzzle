@@ -446,6 +446,73 @@
     font-size: 15.5px; color: var(--ink-3); letter-spacing: .22em;
   }
 
+  /* ── 엽전·상점·업적 ───────────────────── */
+  .top-row {
+    display: flex; justify-content: center; align-items: center;
+    gap: 10px; flex-wrap: wrap; margin: -14px 0 24px;
+  }
+  .purse {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 19px; color: var(--ink);
+    background: linear-gradient(#fbf5e6, #f0e5c8);
+    border: 1px solid var(--line-strong);
+    border-radius: 999px; padding: 8px 16px;
+    box-shadow: var(--shadow-sm);
+  }
+  .purse b { font-size: 21px; color: var(--red-deep); }
+  .coin-mini {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: radial-gradient(circle at 34% 30%, #ddbe80, #a97f36 72%);
+    border: 1px solid rgba(125,92,34,.8);
+    position: relative; flex: none;
+  }
+  .coin-mini::after {
+    content: ""; position: absolute; inset: 0; margin: auto;
+    width: 6px; height: 6px; background: var(--paper);
+    border: 1px solid rgba(125,92,34,.8);
+  }
+  .chip {
+    font-size: 18px; padding: 8px 18px;
+    color: var(--ink-2);
+    background: var(--card);
+    border: 1px solid var(--line-strong);
+    border-radius: 999px; cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: transform .13s ease, background-color .13s ease;
+  }
+  .chip:hover { transform: translateY(-1px); background: #fffdf6; }
+  .chip.on { color: #f8f0dd; background: linear-gradient(160deg, #5d7f5e, var(--green)); border-color: rgba(60,90,60,.7); }
+
+  .shop-row {
+    display: flex; align-items: center; gap: 10px;
+    text-align: left; padding: 14px 4px;
+    border-top: 1px solid var(--line);
+  }
+  .shop-name { flex: 1; font-size: 21px; color: var(--ink); }
+  .shop-name small { display: block; font-size: 14px; color: var(--ink-3); }
+  .shop-have { font-size: 15px; color: var(--ink-2); white-space: nowrap; }
+  .shop-help { font-size: 16px; color: var(--ink-2); line-height: 1.7; margin-bottom: 6px; }
+  .buy-btn { font-size: 17px; padding: 10px 14px; }
+
+  .ach-list { text-align: left; max-height: 52vh; overflow-y: auto; }
+  .ach-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 4px; border-top: 1px solid var(--line);
+    opacity: .55;
+  }
+  .ach-row.done { opacity: 1; }
+  .ach-mark {
+    width: 34px; height: 34px; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 8px; font-size: 17px;
+    background: rgba(47,38,28,.08); color: var(--ink-3);
+  }
+  .ach-row.done .ach-mark { background: var(--red); color: #f8f0dd; }
+  .ach-body { flex: 1; }
+  .ach-body b { font-size: 18px; }
+  .ach-body small { display: block; font-size: 14px; color: var(--ink-3); }
+  .ach-prize { font-size: 15px; color: var(--red-deep); white-space: nowrap; }
+
   /* ── 두루마리(모달) ───────────────────── */
   .veil {
     position: fixed; inset: 0; z-index: 50;
@@ -624,6 +691,12 @@
         <span class="diff-label">난이도</span>
         <nav class="diff-tabs" id="diffTabs" aria-label="난이도 선택"></nav>
       </div>
+      <div class="top-row">
+        <span class="purse" title="엽전"><i class="coin-mini"></i><b id="coinCount">0</b>닢</span>
+        <button class="chip" id="shopBtn">상점</button>
+        <button class="chip" id="achBtn">업적</button>
+        <button class="chip" id="bgmBtn">풍악 켜기</button>
+      </div>
 
       <div class="layout">
         <div class="board-wrap">
@@ -693,12 +766,23 @@
     <div class="hanji scroll-card" id="defCard"></div>
   </div>
 
+  <!-- 상점 -->
+  <div class="veil" id="shopVeil" role="dialog" aria-modal="true">
+    <div class="hanji scroll-card" id="shopCard"></div>
+  </div>
+
+  <!-- 업적 -->
+  <div class="veil" id="achVeil" role="dialog" aria-modal="true">
+    <div class="hanji scroll-card" id="achCard"></div>
+  </div>
+
   <!-- 완성 축하 -->
   <div class="veil" id="finishVeil" role="dialog" aria-modal="true">
     <div class="hanji scroll-card finish" id="finishCard"></div>
   </div>
 
   <div id="toast"></div>
+  <audio id="bgm" src="sound/bgm.mp3" loop preload="none"></audio>
 
   <script src="puzzles.js"></script>
   <script src="words.js"></script>
@@ -711,10 +795,12 @@
      - 완성한 낱말을 누르면 뜻풀이가 열린다. (열쇠/뜻은 처음에 비공개)
      ================================================================ */
   const DIFFS = [
-    { id: "easy",   name: "하수", desc: "쉬움 — 글자를 넉넉히 밝혀 둠",  seedRatio: 0.52, guarantee: true,  hints: 5, defs: 5 },
-    { id: "normal", name: "중수", desc: "보통 — 낱말마다 한 자쯤 밝혀 둠", seedRatio: 0.38, guarantee: true,  hints: 3, defs: 3 },
-    { id: "hard",   name: "고수", desc: "어려움 — 아주 드문드문 밝혀 둠",  seedRatio: 0.20, guarantee: false, hints: 2, defs: 2 },
+    { id: "easy",   name: "하수", desc: "쉬움 — 흔히 쓰는 낱말만",    seedRatio: 0.50, guarantee: true,  hints: 5, defs: 5, tiers: [3], reward: 20 },
+    { id: "normal", name: "중수", desc: "보통 — 두루 쓰는 낱말까지",  seedRatio: 0.38, guarantee: true,  hints: 3, defs: 3, tiers: [2, 3], reward: 35 },
+    { id: "hard",   name: "고수", desc: "어려움 — 드문 낱말과 옛말",   seedRatio: 0.20, guarantee: false, hints: 2, defs: 2, tiers: [1, 2], reward: 55 },
   ];
+  // 흔히 쓰지 않는 옛말·전문말 — 고수 난이도에서만 나온다
+  const RARE_WORDS = new Set(["다듬이","인두","행전","봇짐","괴나리봇짐","물레실","삿대","뗏목","돛단배","나룻배","달구지","가마꾼","말안장","말고삐","편자","풀무","부지깽이","부삽","풍로","화로","인주","족자","합죽선","호롱불","횃불","부싯깃","물지게","수레바퀴","짚신감발","무명","누비","실꾸리","쪽빛","다홍","옥빛","잿빛","먹빛","소반","교자상","떡살","광주리","대바구니","소반다리","질그릇","놋그릇","사기그릇","맷돌","절굿공이","항아리뚜껑","시루떡","백설기","절편","약과","강정","유과","한과","쌍화차","막장","젓갈","콩자반","약식","좁쌀","기장","녹두","멥쌀","현미","두엄","거름","옥토","황무지","신작로","둑길","샛길","고샅","주막","여관","관가","사또","원님","포졸","나졸","과거","급제","낙방","벼슬","세자","신하","병졸","갑옷","투구","망루","파수꾼","봉화","역참","파발","머슴","보부상","광대","소리꾼","글쟁이","목동","의원","약초꾼","석수","도공","옹기장이","대장장이","장인정신","두레","품앗이","김매기","타작","볏단","볏짚","나락","이삭","낟알","겨","무동","심마니","석빙고","화문석","지게","수라상","족보","복조리","상평통보","기와집","한옥마을","화랑도","문방사우","격세지감","난공불락","지피지기","조삼모사","일사천리","어부지리","다사다난","희로애락","감언이설","죽마고우","일석이조","훈장","훈민정음","정자나무","거문고","옹달샘","물레방아","콩쥐팥쥐","심청가","개다리소반","미숫가루","동치미","무동","서당","솟대","시조","심마니","엿장수","온돌","윷놀이","장독대","제기차기","짚신","청사초롱","탈춤","팽이치기","해녀","가야금","돌하르방","곰방대","까치밥","나침반","검무","왕골","단군왕검","진돗개","골무","맷돌","무쇠","토시","배자","마고자","버선","버선발","가죽신","고름","섶","깃","기별","안부","품삯","엽전","객지","타향","귀향","방앗간지기","원두막","우물가","빨래터","돌담길","마을회관","추임새","신명","상모","북채","장구채","소고","나발","태평소","가야금줄","거문고줄","투호","줄타기","탈놀이","말판","윷판","윷가락","얼레","연줄","자치기","실뜨기","고무줄놀이","샅바","씨름판","과녁","성벽","성문","칼집","방패","화살","활","군사","임금님","왕비","장군"]);
   const SAVE_KEY = "hanji-crossword-v3";
   const DIR_KO = { across: "가로", down: "세로" };
   const RANDOM = PUZZLES.length;      // 랜덤 마당 번호 (마당은 이것 하나뿐)
@@ -725,15 +811,22 @@
   const WORD_POOL = (() => {
     const map = new Map();
     const usable = (w) => [...w.answer].length >= 2;   // 한 글자 낱말은 교차에 쓸 수 없다
+    // 등급 — 3: 흔히 쓰는 말, 2: 두루 쓰는 말, 1: 드문 말·옛말
+    const tierOf = (answer, common) => {
+      if (RARE_WORDS.has(answer)) return 1;
+      const len = [...answer].length;
+      if (common) return len <= 3 ? 3 : 2;
+      return len <= 3 ? 2 : 1;
+    };
     PUZZLES.forEach((p) => p.words.forEach((w) => {
-      if (usable(w) && !map.has(w.answer)) map.set(w.answer, { answer: w.answer, clue: w.clue || "", def: w.def });
+      if (usable(w) && !map.has(w.answer)) map.set(w.answer, { answer: w.answer, clue: w.clue || "", def: w.def, tier: tierOf(w.answer, false) });
     }));
     EXTRA_WORDS.forEach((w) => {
-      if (usable(w) && !map.has(w.answer)) map.set(w.answer, { answer: w.answer, clue: w.clue || "", def: w.def });
+      if (usable(w) && !map.has(w.answer)) map.set(w.answer, { answer: w.answer, clue: w.clue || "", def: w.def, tier: tierOf(w.answer, false) });
     });
     if (typeof COMMON_WORDS !== "undefined") {
       COMMON_WORDS.forEach((w) => {
-        if (usable(w) && !map.has(w.answer)) map.set(w.answer, { answer: w.answer, clue: "", def: w.def });
+        if (usable(w) && !map.has(w.answer)) map.set(w.answer, { answer: w.answer, clue: "", def: w.def, tier: tierOf(w.answer, true) });
       });
     }
     return [...map.values()];
@@ -769,6 +862,11 @@
   if (typeof save.current !== "number") save.current = 0;
   if (typeof save.diff !== "number" || save.diff < 0 || save.diff >= DIFFS.length) save.diff = 1;
   if (typeof save.randomSeed !== "number") save.randomSeed = Math.floor(Math.random() * 2147483647);
+  if (typeof save.coins !== "number") save.coins = 30;          // 엽전
+  save.bag = save.bag || { hint: 0, def: 0 };                    // 상점에서 산 밑천
+  save.stats = Object.assign({ words: 0, boards: 0, mistakes: 0, hints: 0, defs: 0, defViews: 0,
+                               perfect: 0, noHint: 0, hardBoards: 0, coinsEarned: 0 }, save.stats);
+  save.got = save.got || [];                                     // 이룬 업적
 
   const diff = () => DIFFS[save.diff];
   const pKey = (i) => (i === RANDOM ? `R${save.randomSeed}:${diff().id}` : `${i}:${diff().id}`);
@@ -779,7 +877,8 @@
   function pSave(i) {
     const k = pKey(i);
     if (!save.puzzles[k]) {
-      save.puzzles[k] = { filled: [], hintCells: [], hints: diff().hints, defs: diff().defs, defsUsed: [], mistakes: 0 };
+      save.puzzles[k] = { filled: [], hintCells: [], hints: diff().hints + (save.bag.hint || 0),
+                          defs: diff().defs + (save.bag.def || 0), defsUsed: [], mistakes: 0 };
     }
     return save.puzzles[k];
   }
@@ -865,7 +964,8 @@
     };
     const placed = [];
     let minR = size, maxR = -1, minC = size, maxC = -1;   // 글자가 쓰인 자리의 테두리
-    const pool = shuffle(WORD_POOL.slice(), rng);
+    const band = diff().tiers;
+    const pool = shuffle(WORD_POOL.filter((w) => band.includes(w.tier)), rng);
 
     // 낱말을 (r,c,dir)에 둘 수 있는지 — 표준 십자말풀이 규칙 검사
     const canPlace = (answer, r, c, dir) => {
@@ -1282,6 +1382,7 @@
           keys.forEach((k) => { if (pending.has(k)) { tray.push(pending.get(k)); pending.delete(k); } });
           const ps = pSave(cur);
           ps.mistakes = (ps.mistakes || 0) + 1;
+          save.stats.mistakes += 1;
           wrong++;
           w.cells.forEach(([r, c]) => {
             const el = cellEls[key(r, c)];
@@ -1294,6 +1395,9 @@
     const newly = puzzle.words.filter((w) => !beforeSolved.has(w.wi) && wordSolved(w.wi));
     if (newly.length) {
       Sound.solve();
+      save.stats.words += newly.length;
+      addCoins(newly.length * 2);
+      checkAchievements();
       toast(`옳거니! ${newly.map((w) => `「${w.answer}」`).join(", ")} 완성 — 누르면 뜻풀이가 열리오.`, "good");
     } else if (wrong) {
       Sound.wrong();
@@ -1339,6 +1443,8 @@
     }
     if (!target) return;
     ps.hints -= 1;
+    save.stats.hints += 1;
+    if (save.bag.hint > 0) save.bag.hint -= 1;
     // 임시 글자가 놓여 있으면 되돌리고 참 글자를 확정한다
     if (pending.has(target)) { tray.push(pending.get(target)); pending.delete(target); }
     const [r, c] = target.split(",").map(Number);
@@ -1364,6 +1470,8 @@
     const ps = pSave(cur);
     if (selWi === null || wordSolved(selWi) || defsUsed.has(selWi) || ps.defs <= 0) return;
     ps.defs -= 1;
+    save.stats.defs += 1;
+    if (save.bag.def > 0) save.bag.def -= 1;
     defsUsed.add(selWi);
     saveState();
     renderPanel();
@@ -1389,6 +1497,9 @@
            href="https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=${encodeURIComponent(w.answer)}">표준국어대사전에서 찾아보기 ↗</a>
       </div>`;
     }).join("") + `<div class="close-row"><button class="btn" id="defClose">닫기</button></div>`;
+    save.stats.defViews += solvedWis.length;
+    persist();
+    checkAchievements();
     $("defVeil").classList.add("show");
     $("defClose").addEventListener("click", closeDefModal);
   }
@@ -1400,6 +1511,20 @@
     const ps = pSave(cur);
     ps.done = true;
     persist();
+    if (!ps.rewarded) {
+      ps.rewarded = true;
+      const d = diff();
+      const noMiss = (ps.mistakes || 0) === 0;
+      const noHint = d.hints - ps.hints <= 0;
+      save.stats.boards += 1;
+      if (noMiss) save.stats.perfect += 1;
+      if (noHint) save.stats.noHint += 1;
+      if (d.id === "hard") save.stats.hardBoards += 1;
+      const bonus = (noMiss ? 20 : 0) + (noHint ? 20 : 0);
+      persist();
+      addCoins(d.reward + bonus);
+      checkAchievements();
+    }
     const usedHints = diff().hints - ps.hints;
     const usedDefs = diff().defs - ps.defs;
     const mistakes = ps.mistakes || 0;
@@ -1412,7 +1537,7 @@
         <h2>장원 급제!</h2>
         <p>「${puzzle.name} · ${puzzle.theme}」의 낱말 ${puzzle.words.length}개를<br>모두 완성하셨소.<br>
         힌트 <span class="stat">${usedHints}</span>번, 뜻보기 <span class="stat">${usedDefs}</span>번, 헛짚기 <span class="stat">${mistakes}</span>번.</p>
-        <p style="font-size:13px;color:var(--ink-3);">완성한 낱말을 누르면 언제든 뜻풀이를 볼 수 있소.</p>
+        <p style="font-size:13px;color:var(--ink-3);">완성한 낱말을 누르면 언제든 뜻풀이를 볼 수 있소.<br>지닌 엽전 ${save.coins}닢</p>
         <div class="close-row">
           <button class="btn" id="nextMadang">${nextLabel}</button>
           <button class="btn ghost" id="finishClose">판 구경하기</button>
@@ -1503,6 +1628,8 @@
         notes([[523, 120, 0.2, 0.18], [659, 260, 0.2, 0.18], [784, 400, 0.2, 0.18], [1046, 560, 0.7, 0.2]]);
       },
       newBoard: () => notes([[392, 0, 0.14, 0.14], [523, 90, 0.24, 0.16]]),
+      buy: () => notes([[880, 0, 0.1, 0.13], [1320, 70, 0.16, 0.12]]),
+      achieve: () => { gong(330, 1.1, 0.18); notes([[659, 100, 0.16, 0.16], [880, 240, 0.4, 0.18]]); },
       toggle: () => {
         save.sound = save.sound === false;   // 꺼져 있었으면 켠다
         persist();
@@ -1521,6 +1648,108 @@
     b.setAttribute("aria-pressed", on ? "true" : "false");
   }
 
+  /* ── 엽전·상점·업적 ────────────────────── */
+  const PRICES = { hint: 25, def: 18 };
+  const ACHIEVEMENTS = [
+    { id: "first",   name: "첫 낱말",     desc: "낱말 하나를 맞히다",            check: (t) => t.words >= 1,    prize: 10 },
+    { id: "w10",     name: "열 낱말",     desc: "낱말 열 개를 맞히다",           check: (t) => t.words >= 10,   prize: 15 },
+    { id: "w50",     name: "쉰 낱말",     desc: "낱말 쉰 개를 맞히다",           check: (t) => t.words >= 50,   prize: 30 },
+    { id: "w200",    name: "이백 낱말",   desc: "낱말 이백 개를 맞히다",         check: (t) => t.words >= 200,  prize: 80 },
+    { id: "b1",      name: "첫 판",       desc: "판 하나를 다 풀다",             check: (t) => t.boards >= 1,   prize: 15 },
+    { id: "b5",      name: "다섯 판",     desc: "판 다섯을 다 풀다",             check: (t) => t.boards >= 5,   prize: 30 },
+    { id: "b20",     name: "스무 판",     desc: "판 스물을 다 풀다",             check: (t) => t.boards >= 20,  prize: 90 },
+    { id: "perfect", name: "무결점",      desc: "헛짚기 없이 판을 다 풀다",      check: (t) => t.perfect >= 1,  prize: 40 },
+    { id: "nohint",  name: "제 힘으로",   desc: "힌트 없이 판을 다 풀다",        check: (t) => t.noHint >= 1,   prize: 40 },
+    { id: "hard",    name: "고수의 길",   desc: "고수 난이도로 판을 다 풀다",    check: (t) => t.hardBoards >= 1, prize: 60 },
+    { id: "hard5",   name: "장원 급제",   desc: "고수 난이도로 다섯 판을 풀다",  check: (t) => t.hardBoards >= 5, prize: 120 },
+    { id: "reader",  name: "글눈 밝음",   desc: "뜻풀이를 스무 번 펼쳐 보다",    check: (t) => t.defViews >= 20, prize: 25 },
+    { id: "rich",    name: "곳간 든든",   desc: "엽전을 이백 닢 모으다",         check: (t) => t.coinsEarned >= 200, prize: 50 },
+  ];
+
+  function addCoins(n, why) {
+    if (n <= 0) return;
+    save.coins += n;
+    save.stats.coinsEarned += n;
+    persist();
+    renderCoins();
+    if (why) toast(`엽전 ${n}닢을 얻었소 — ${why}`, "good");
+  }
+
+  function checkAchievements() {
+    const newly = ACHIEVEMENTS.filter((a) => !save.got.includes(a.id) && a.check(save.stats));
+    if (!newly.length) return;
+    newly.forEach((a) => { save.got.push(a.id); save.coins += a.prize; save.stats.coinsEarned += a.prize; });
+    persist();
+    renderCoins();
+    Sound.achieve();
+    setTimeout(() => {
+      toast(`업적 「${newly[0].name}」 이룸! 엽전 ${newly.reduce((n, a) => n + a.prize, 0)}닢`, "good");
+    }, 700);
+  }
+
+  function renderCoins() {
+    const el = $("coinCount");
+    if (el) el.textContent = save.coins;
+  }
+
+  function openShop() {
+    const card = $("shopCard");
+    const row = (kind, name, small) => {
+      const price = PRICES[kind];
+      const can = save.coins >= price;
+      return `<div class="shop-row">
+        <span class="shop-name">${name}<small>${small}</small></span>
+        <span class="shop-have">지닌 밑천 ${save.bag[kind]}개</span>
+        <button class="btn buy-btn" data-kind="${kind}" ${can ? "" : "disabled"}>${price}닢에 사기</button>
+      </div>`;
+    };
+    card.innerHTML = `
+      <span class="def-label">상점</span>
+      <p class="word-title" style="font-size:30px;">엽전 ${save.coins}닢</p>
+      <div class="brush-line"></div>
+      <p class="shop-help">낱말을 맞히고 판을 풀면 엽전이 쌓이오.<br>산 밑천은 다음 판에도 그대로 쓰이오.</p>
+      ${row("hint", "힌트", "빈 칸의 글자를 밝혀 줌")}
+      ${row("def", "뜻보기", "낱말의 뜻을 미리 보여 줌")}
+      <div class="close-row"><button class="btn ghost" id="shopClose">닫기</button></div>`;
+    $("shopVeil").classList.add("show");
+    card.querySelectorAll(".buy-btn").forEach((b) => b.addEventListener("click", () => {
+      const kind = b.dataset.kind, price = PRICES[kind];
+      if (save.coins < price) return;
+      save.coins -= price;
+      save.bag[kind] += 1;
+      const ps = pSave(cur);
+      if (kind === "hint") ps.hints += 1; else ps.defs += 1;
+      persist();
+      Sound.buy();
+      renderCoins(); renderItems();
+      toast(`${kind === "hint" ? "힌트" : "뜻보기"}를 하나 샀소.`, "good");
+      openShop();
+    }));
+    $("shopClose").addEventListener("click", () => $("shopVeil").classList.remove("show"));
+  }
+
+  function openAchievements() {
+    const card = $("achCard");
+    const done = save.got.length;
+    card.innerHTML = `
+      <span class="def-label">업적</span>
+      <p class="word-title" style="font-size:30px;">${done} / ${ACHIEVEMENTS.length}</p>
+      <div class="brush-line"></div>
+      <div class="ach-list">
+        ${ACHIEVEMENTS.map((a) => {
+          const ok = save.got.includes(a.id);
+          return `<div class="ach-row ${ok ? "done" : ""}">
+            <span class="ach-mark">${ok ? "完" : "○"}</span>
+            <span class="ach-body"><b>${a.name}</b><small>${a.desc}</small></span>
+            <span class="ach-prize">${a.prize}닢</span>
+          </div>`;
+        }).join("")}
+      </div>
+      <div class="close-row"><button class="btn ghost" id="achClose">닫기</button></div>`;
+    $("achVeil").classList.add("show");
+    $("achClose").addEventListener("click", () => $("achVeil").classList.remove("show"));
+  }
+
   /* ── 알림쪽지 ── */
   let toastTimer;
   function toast(msg, kind) {
@@ -1537,6 +1766,27 @@
     $("toast").className = "";
   });
 
+  /* ── 풍악(배경음악) ── */
+  function renderBgmBtn() {
+    const b = $("bgmBtn");
+    const on = save.bgm === true;
+    b.textContent = on ? "풍악 끄기" : "풍악 켜기";
+    b.classList.toggle("on", on);
+  }
+  function toggleBgm(force) {
+    const a = $("bgm");
+    const on = typeof force === "boolean" ? force : !(save.bgm === true);
+    save.bgm = on;
+    persist();
+    if (on) {
+      a.volume = 0.35;
+      a.play().catch(() => { save.bgm = false; persist(); renderBgmBtn(); toast("소리를 켜려면 화면을 한 번 눌러 주오."); });
+    } else {
+      a.pause();
+    }
+    renderBgmBtn();
+  }
+
   /* ── 이벤트 연결 ── */
   function newRandomBoard() {
     delete save.puzzles[pKey(RANDOM)]; // 지금 판의 진행 기록 정리
@@ -1548,6 +1798,11 @@
   }
   $("newRandomBtn").addEventListener("click", newRandomBoard);
   $("soundBtn").addEventListener("click", () => Sound.toggle());
+  $("shopBtn").addEventListener("click", openShop);
+  $("achBtn").addEventListener("click", openAchievements);
+  $("bgmBtn").addEventListener("click", () => toggleBgm());
+  $("shopVeil").addEventListener("click", (e) => { if (e.target === $("shopVeil")) $("shopVeil").classList.remove("show"); });
+  $("achVeil").addEventListener("click", (e) => { if (e.target === $("achVeil")) $("achVeil").classList.remove("show"); });
   $("hintBtn").addEventListener("click", useHint);
   $("defBtn").addEventListener("click", useDef);
   $("resetBtn").addEventListener("click", () => {
@@ -1559,12 +1814,26 @@
   $("defVeil").addEventListener("click", (e) => { if (e.target === $("defVeil")) closeDefModal(); });
   $("finishVeil").addEventListener("click", (e) => { if (e.target === $("finishVeil")) $("finishVeil").classList.remove("show"); });
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") { closeDefModal(); $("finishVeil").classList.remove("show"); }
+    if (e.key === "Escape") {
+      closeDefModal();
+      ["finishVeil", "shopVeil", "achVeil"].forEach((id) => $(id).classList.remove("show"));
+    }
   });
 
   /* ── 시작 ── */
   loadPuzzle(cur);
   renderSoundBtn();
+  renderCoins();
+  renderBgmBtn();
+  if (save.bgm === true) {
+    // 브라우저가 막으면 첫 누름에 다시 시도한다
+    const a = $("bgm");
+    a.volume = 0.35;
+    a.play().catch(() => {
+      const once = () => { a.play().catch(() => {}); document.removeEventListener("pointerdown", once); };
+      document.addEventListener("pointerdown", once);
+    });
+  }
 
   /* 자동 시험용 (게임에는 영향 없음) */
   window.__debug = {
