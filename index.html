@@ -542,6 +542,42 @@
     75% { transform: translateX(-3px); }
   }
 
+  /* ── 휴대폰: 글씨를 더욱 크게 ─────────────── */
+  @media (max-width: 880px) {
+    .cell { font-size: clamp(26px, 8vw, 38px); }
+    .cell .num { font-size: 11px; }
+    .tile { width: 64px; height: 64px; font-size: 34px; }
+    .tray { gap: 10px; }
+    .tray .all-done { font-size: 20px; }
+    .panel h2 { font-size: 22px; }
+    .panel h2 .small { font-size: 16px; }
+    .clue-current .word-meta { font-size: 18px; }
+    .clue-current .word-boxes { font-size: 38px; }
+    .clue-current .status-line { font-size: 20px; }
+    .clue-current .def-peek { font-size: 19px; line-height: 1.75; }
+    .clue-current .placeholder { font-size: 20px; }
+    .btn { font-size: 21px; padding: 13px 24px; }
+    .item-btn { font-size: 21px; }
+    .item-btn .label small { font-size: 16px; }
+    .item-btn .count { font-size: 26px; }
+    .clues h3 { font-size: 18px; }
+    .clues li { font-size: 21px; }
+    .clues li .cnum { font-size: 17px; min-width: 24px; }
+    .madang-tabs button { font-size: 19px; }
+    .diff-tabs button { font-size: 19px; }
+    .diff-label { font-size: 17px; }
+    .progress-line { font-size: 18px; }
+    #toast { font-size: 20px; padding: 15px 32px; }
+    .scroll-card .word-title { font-size: 42px; }
+    .scroll-card .word-dir { font-size: 17px; }
+    .scroll-card .def-text { font-size: 22px; line-height: 1.9; }
+    .scroll-card .def-label { font-size: 16px; }
+    .scroll-card .dict-link { font-size: 18px; }
+    .scroll-card.finish h2 { font-size: 33px; }
+    .scroll-card.finish p { font-size: 21px; }
+    .foot-note { font-size: 16px; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     * { animation: none !important; transition: none !important; }
   }
