@@ -533,7 +533,7 @@
     transition: opacity .25s ease, transform .25s ease;
     max-width: 88vw; text-align: center;
   }
-  #toast.show { opacity: 1; transform: translateX(-50%); }
+  #toast.show { opacity: 1; transform: translateX(-50%); pointer-events: auto; cursor: pointer; }
   #toast.good { background: rgba(85, 116, 86, .96); }
   #toast.bad { background: rgba(147, 51, 44, .96); }
 
@@ -1383,8 +1383,14 @@
     t.textContent = msg;
     t.className = "show" + (kind ? " " + kind : "");
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { t.className = ""; }, 2600);
+    // 낱말을 맞혔을 때는 더 오래 머무르게 하고, 눌러서 바로 닫을 수도 있다
+    const stay = kind === "good" ? 6000 : 4500;
+    toastTimer = setTimeout(() => { t.className = ""; }, stay);
   }
+  $("toast").addEventListener("click", () => {
+    clearTimeout(toastTimer);
+    $("toast").className = "";
+  });
 
   /* ── 이벤트 연결 ── */
   function newRandomBoard() {
