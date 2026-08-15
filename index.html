@@ -1528,8 +1528,8 @@
     t.textContent = msg;
     t.className = "show" + (kind ? " " + kind : "");
     clearTimeout(toastTimer);
-    // 낱말을 맞혔을 때는 더 오래 머무르게 하고, 눌러서 바로 닫을 수도 있다
-    const stay = kind === "good" ? 6000 : 4500;
+    // 낱말을 맞혔을 때만 조금 더 머무르게 하고, 눌러서 바로 닫을 수도 있다
+    const stay = kind === "good" ? 3000 : 2200;
     toastTimer = setTimeout(() => { t.className = ""; }, stay);
   }
   $("toast").addEventListener("click", () => {
