@@ -598,7 +598,6 @@
         <div class="divider"><span class="knot">❀</span></div>
       </header>
 
-      <nav class="madang-tabs" id="madangTabs" aria-label="마당 선택"></nav>
       <div class="diff-row">
         <span class="diff-label">난이도</span>
         <nav class="diff-tabs" id="diffTabs" aria-label="난이도 선택"></nav>
@@ -656,7 +655,7 @@
 
           <div style="display:flex; gap:10px; align-self:flex-end;">
             <button class="btn" id="newRandomBtn" hidden>새 판 뽑기</button>
-            <button class="btn ghost" id="resetBtn">이 마당 새로 풀기</button>
+            <button class="btn ghost" id="resetBtn">이 판 처음부터</button>
           </div>
         </aside>
       </div>
@@ -694,9 +693,9 @@
   ];
   const SAVE_KEY = "hanji-crossword-v3";
   const DIR_KO = { across: "가로", down: "세로" };
-  const RANDOM = PUZZLES.length;      // 랜덤 마당 탭 번호
+  const RANDOM = PUZZLES.length;      // 랜덤 마당 번호 (마당은 이것 하나뿐)
   const RANDOM_SIZE = 11;             // 랜덤 판 크기
-  const RANDOM_TARGET = 14;           // 랜덤 판 목표 낱말 수
+  const RANDOM_TARGET = 16;           // 랜덤 판 목표 낱말 수
 
   /* 150개 낱말 풀: 고정 마당의 낱말 + 랜덤 전용 낱말 */
   const WORD_POOL = (() => {
@@ -917,16 +916,16 @@
 
   function generateRandom(seed) {
     let best = null;
-    for (let attempt = 0; attempt < 12; attempt++) {
+    for (let attempt = 0; attempt < 30; attempt++) {
       const p = tryGenerate(seed + attempt * 7919);
       if (!best || p.words.length > best.words.length) best = p;
-      if (best.words.length >= 11) break;
+      if (best.words.length >= RANDOM_TARGET) break;
     }
     return best;
   }
 
   /* ── 실행 상태 ── */
-  let cur = Math.min(Math.max(save.current, 0), RANDOM);
+  let cur = RANDOM;   // 마당은 랜덤 마당 하나뿐
   let puzzle, grid, seeds;
   let filled, hintCells, defsUsed; // Set
   let pending = new Map();         // 아직 확정되지 않은 임시 글자 (칸 → 글자)
@@ -992,21 +991,8 @@
 
   /* ── 그리기 ── */
   function renderTabs() {
-    const nav = $("madangTabs");
-    nav.innerHTML = "";
-    const addTab = (label, i) => {
-      const b = document.createElement("button");
-      const done = i === cur
-        ? solvedCount() === puzzle.words.length
-        : (save.puzzles[pKey(i)] && save.puzzles[pKey(i)].done);
-      b.innerHTML = `${label}${done ? ' <span class="done-mark">完</span>' : ""}`;
-      if (i === cur) b.classList.add("active");
-      b.addEventListener("click", () => loadPuzzle(i));
-      nav.appendChild(b);
-    };
-    PUZZLES.forEach((p, i) => addTab(`${p.name} · ${p.theme}`, i));
-    addTab("랜덤 마당 · 복불복", RANDOM);
-    $("newRandomBtn").hidden = cur !== RANDOM;
+    // 마당은 랜덤 마당 하나뿐이라 탭을 두지 않는다
+    $("newRandomBtn").hidden = false;
     renderDiffTabs();
   }
 
@@ -1158,7 +1144,7 @@
     const done = solvedCount();
     $("progressLabel").textContent = `풀이 ${done} / ${total}`;
     $("progressBar").style.width = (total ? (done / total) * 100 : 0) + "%";
-    $("themeLabel").textContent = puzzle.theme;
+    $("themeLabel").textContent = `낱말 ${puzzle.words.length}개`;
   }
 
   function renderAll() {
@@ -1368,8 +1354,7 @@
     const usedDefs = diff().defs - ps.defs;
     const mistakes = ps.mistakes || 0;
     // 다음 단추: 고정 마당 → 다음 마당(마지막 뒤엔 랜덤 마당), 랜덤 마당 → 새 판 뽑기
-    const nextLabel = cur === RANDOM ? "새 판 뽑기"
-      : (cur + 1 === RANDOM ? "랜덤 마당으로" : "다음 마당으로");
+    const nextLabel = "새 판 뽑기";
     setTimeout(() => {
       const card = $("finishCard");
       card.innerHTML = `
@@ -1385,8 +1370,7 @@
       $("finishVeil").classList.add("show");
       $("nextMadang").addEventListener("click", () => {
         $("finishVeil").classList.remove("show");
-        if (cur === RANDOM) newRandomBoard();
-        else loadPuzzle(cur + 1);
+        newRandomBoard();
       });
       $("finishClose").addEventListener("click", () => $("finishVeil").classList.remove("show"));
     }, 650);
@@ -1414,7 +1398,7 @@
   $("hintBtn").addEventListener("click", useHint);
   $("defBtn").addEventListener("click", useDef);
   $("resetBtn").addEventListener("click", () => {
-    if (!confirm("이 마당을 처음부터 다시 풀겠소?")) return;
+    if (!confirm("이 판을 처음부터 다시 풀겠소?")) return;
     delete save.puzzles[pKey(cur)];
     loadPuzzle(cur);
     toast("새 마음으로 다시 시작하오.", "good");
