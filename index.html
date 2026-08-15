@@ -7,7 +7,7 @@
 <meta name="description" content="광고 없는 한글 가로세로 낱말 퍼즐. 글자를 골라 채우는 한국 전통 한지 분위기의 무료 퍼즐 놀이.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
   :root {
     --ink: #211a10;
@@ -28,8 +28,8 @@
     --card: rgba(255, 251, 241, .58);
     --shadow-sm: 0 1px 2px rgba(43, 33, 24, .08);
     --shadow-md: 0 2px 6px rgba(43, 33, 24, .08), 0 12px 32px rgba(43, 33, 24, .10);
-    --font-brush: "궁서체", "궁서", Gungsuh, GungSeo, "Gowun Batang", "Nanum Myeongjo", "Noto Serif KR", serif;
-    --font-num: "Nanum Myeongjo", serif;
+    --font-brush: "Noto Sans KR", "Apple SD Gothic Neo", "맑은 고딕", "Malgun Gothic", "나눔고딕", sans-serif;
+    --font-num: "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -201,7 +201,8 @@
   .progress-line {
     display: flex; align-items: center; justify-content: space-between;
     font-size: 20px; color: var(--ink-2); letter-spacing: .08em;
-    width: min(96vw, 680px);
+    width: min(98vw, 780px);
+    max-width: 100%;
   }
   .progress-line .bar {
     flex: 1; height: 5px; margin: 0 12px;
@@ -216,14 +217,13 @@
   }
 
   .board {
-    --n: 9;
-    --board-w: min(96vw, 680px);
-    --cell-w: calc((var(--board-w) - 6px) / var(--n));
+    --rows: 9; --cols: 9;
+    --cell-w: min(calc(98vw / var(--cols)), calc(62vh / var(--rows)), 86px);
     display: grid;
-    grid-template-columns: repeat(var(--n), 1fr);
-    grid-template-rows: repeat(var(--n), 1fr);
-    width: var(--board-w);
-    aspect-ratio: 1;
+    grid-template-columns: repeat(var(--cols), 1fr);
+    grid-template-rows: repeat(var(--rows), 1fr);
+    width: calc(var(--cell-w) * var(--cols));
+    height: calc(var(--cell-w) * var(--rows));
     border: 2px solid #3b2f22;
     border-radius: 12px;
     overflow: hidden;
@@ -239,7 +239,7 @@
     min-width: 0; min-height: 0;
     overflow: hidden;
     background: var(--cell);
-    font-size: calc(var(--cell-w) * .66);
+    font-size: calc(var(--cell-w) * .74);
     font-weight: 800;
     color: var(--ink);
     cursor: pointer;
@@ -255,7 +255,7 @@
   }
   .cell .num {
     position: absolute; top: 2px; left: 4px;
-    font-size: calc(var(--cell-w) * .22);
+    font-size: calc(var(--cell-w) * .2);
     font-weight: 600;
     color: var(--ink-3);
     font-family: var(--font-num);
@@ -286,7 +286,7 @@
     display: flex; align-items: center; gap: 8px;
     flex-wrap: wrap;
     white-space: nowrap;
-    font-size: 24px;
+    font-size: 26px;
     font-weight: 800;
     letter-spacing: .16em;
     color: var(--ink);
@@ -308,11 +308,11 @@
     color: var(--ink-3); letter-spacing: .04em;
   }
 
-  .tray-panel { width: min(96vw, 680px); }
+  .tray-panel { width: min(98vw, 780px); }
   .tray { display: flex; flex-wrap: wrap; gap: 9px; min-height: 56px; }
   .tile {
-    width: 72px; height: 72px;
-    font-size: 38px; font-weight: 800;
+    width: 82px; height: 82px;
+    font-size: 44px; font-weight: 800;
     color: var(--ink);
     background: linear-gradient(#fdf9ee, #f0e5c8);
     border: 1px solid rgba(122, 95, 55, .5);
@@ -334,10 +334,10 @@
     letter-spacing: .14em; margin-bottom: 8px;
   }
   .clue-current .word-boxes {
-    font-size: 42px; font-weight: 800; letter-spacing: .3em; color: var(--ink);
+    font-size: 48px; font-weight: 800; letter-spacing: .3em; color: var(--ink);
     margin: 2px 0 4px;
   }
-  .clue-current .status-line { font-size: 21px; color: var(--ink-2); line-height: 1.7; margin-top: 8px; }
+  .clue-current .status-line { font-size: 23px; color: var(--ink-2); line-height: 1.7; margin-top: 8px; }
   .clue-current .def-peek {
     margin-top: 12px; padding: 11px 14px;
     background: rgba(60, 90, 143, .07);
@@ -415,7 +415,7 @@
   }
   .clues ol { list-style: none; }
   .clues li {
-    font-size: 23px; line-height: 1.55;
+    font-size: 26px; line-height: 1.55;
     padding: 8px 10px 8px 6px;
     border-radius: 8px;
     cursor: pointer;
@@ -550,7 +550,7 @@
   /* ── 휴대폰: 글씨를 더욱 크게 ─────────────── */
   @media (max-width: 880px) {
     .tile { font-weight: 800; }
-    .tile { width: 72px; height: 72px; font-size: 40px; }
+    .tile { width: 80px; height: 80px; font-size: 44px; }
     .tray { gap: 10px; }
     .tray .all-done { font-size: 20px; }
     .panel h2 { font-size: 26px; }
@@ -565,7 +565,7 @@
     .item-btn .label small { font-size: 16px; }
     .item-btn .count { font-size: 32px; }
     .clues h3 { font-size: 18px; }
-    .clues li { font-size: 25px; }
+    .clues li { font-size: 27px; }
     .clues li .cnum { font-size: 17px; min-width: 24px; }
     .madang-tabs button { font-size: 19px; }
     .diff-tabs button { font-size: 23px; }
@@ -584,7 +584,7 @@
 
   /* ── 아주 좁은 화면: 판 글씨는 크게 두고 둘레만 줄인다 ── */
   @media (max-width: 480px) {
-    .sheet { padding: 20px 10px 26px; }
+    .sheet { padding: 20px 6px 26px; }
     h1.title { font-size: clamp(28px, 8vw, 38px); letter-spacing: .1em; text-indent: .1em; }
     .subtitle { font-size: 13px; letter-spacing: .22em; text-indent: .22em; }
     .seal { position: static; margin: 0 auto 10px; }
@@ -599,8 +599,8 @@
     .item-btn { font-size: 20px; padding: 12px 12px; }
     .item-btn .label small { font-size: 13px; }
     .btn { font-size: 20px; padding: 13px 18px; }
-    .tile { width: 62px; height: 62px; font-size: 34px; }
-    .clues li { font-size: 22px; }
+    .tile { width: 70px; height: 70px; font-size: 40px; }
+    .clues li { font-size: 25px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -784,8 +784,9 @@
 
   /* ── 퍼즐 모형 만들기 ── */
   function buildModel(p) {
-    const size = p.size;
-    const grid = Array.from({ length: size }, () => Array(size).fill(null));
+    const rows = p.rows || p.size, cols = p.cols || p.size;
+    p.rows = rows; p.cols = cols;
+    const grid = Array.from({ length: rows }, () => Array(cols).fill(null));
     p.words.forEach((w, wi) => {
       const chars = [...w.answer];
       w.wi = wi;
@@ -794,7 +795,7 @@
       chars.forEach((ch, k) => {
         const r = w.row + (w.dir === "down" ? k : 0);
         const c = w.col + (w.dir === "across" ? k : 0);
-        if (r >= size || c >= size) throw new Error(`낱말이 판을 벗어남: ${w.answer}`);
+        if (r >= rows || c >= cols) throw new Error(`낱말이 판을 벗어남: ${w.answer}`);
         if (!grid[r][c]) grid[r][c] = { letter: ch, words: [] };
         else if (grid[r][c].letter !== ch) throw new Error(`글자 충돌: ${w.answer} (${r},${c})`);
         grid[r][c].words.push(wi);
@@ -802,8 +803,8 @@
       });
     });
     let n = 1;
-    for (let r = 0; r < size; r++) {
-      for (let c = 0; c < size; c++) {
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
         if (!grid[r][c]) continue;
         const starts = p.words.filter((w) => w.row === r && w.col === c);
         if (starts.length) {
@@ -839,8 +840,8 @@
     }
     // 2단계: 목표 비율까지 채우기
     const all = [];
-    for (let r = 0; r < p.size; r++)
-      for (let c = 0; c < p.size; c++)
+    for (let r = 0; r < p.rows; r++)
+      for (let c = 0; c < p.cols; c++)
         if (grid[r][c]) all.push([r, c]);
     const target = Math.round(all.length * d.seedRatio);
     shuffle(all, rng).forEach(([r, c]) => {
@@ -945,12 +946,11 @@
     }
 
     // 쓰인 영역을 판 가운데로 옮긴다
-    const usedH = maxR - minR + 1, usedW = maxC - minC + 1;
-    const trimmed = Math.max(usedH, usedW);          // 쓰인 자리만큼만 판을 잡는다
-    const shiftR = Math.floor((trimmed - usedH) / 2) - minR;
-    const shiftC = Math.floor((trimmed - usedW) / 2) - minC;
+    const usedH = maxR - minR + 1, usedW = maxC - minC + 1;   // 쓰인 자리만큼만 판을 잡는다
+    const shiftR = -minR, shiftC = -minC;
     return {
-      name: "랜덤 마당", theme: "복불복", size: trimmed,
+      name: "랜덤 마당", theme: "복불복",
+      rows: usedH, cols: usedW, size: Math.max(usedH, usedW),
       words: placed.map((w) => ({ answer: w.answer, clue: w.clue, def: w.def, dir: w.dir, row: w.row + shiftR, col: w.col + shiftC })),
     };
   }
@@ -983,8 +983,8 @@
   function computeTray() {
     const rng = mulberry32(0x7AA9 + boardId() * 104729 + save.diff * 7919);
     const letters = [];
-    for (let r = 0; r < puzzle.size; r++)
-      for (let c = 0; c < puzzle.size; c++)
+    for (let r = 0; r < puzzle.rows; r++)
+      for (let c = 0; c < puzzle.cols; c++)
         if (grid[r][c] && !seeds.has(key(r, c))) letters.push(grid[r][c].letter);
     shuffle(letters, rng);
     // 이미 놓은 글자는 보따리에서 뺀다
@@ -1057,11 +1057,12 @@
   }
 
   function renderBoard() {
-    boardEl.style.setProperty("--n", puzzle.size);
+    boardEl.style.setProperty("--rows", puzzle.rows);
+    boardEl.style.setProperty("--cols", puzzle.cols);
     boardEl.innerHTML = "";
     cellEls = {};
-    for (let r = 0; r < puzzle.size; r++) {
-      for (let c = 0; c < puzzle.size; c++) {
+    for (let r = 0; r < puzzle.rows; r++) {
+      for (let c = 0; c < puzzle.cols; c++) {
         const cell = grid[r][c];
         const el = document.createElement("div");
         el.className = "cell" + (cell ? "" : " block");
@@ -1089,8 +1090,8 @@
     if (selWi !== null) {
       puzzle.words[selWi].cells.forEach(([r, c]) => selCells.add(key(r, c)));
     }
-    for (let r = 0; r < puzzle.size; r++) {
-      for (let c = 0; c < puzzle.size; c++) {
+    for (let r = 0; r < puzzle.rows; r++) {
+      for (let c = 0; c < puzzle.cols; c++) {
         const cell = grid[r][c];
         if (!cell) continue;
         const k = key(r, c);
@@ -1467,6 +1468,7 @@
     trayLetters: () => tray.slice(),
     solvedCount,
     size: () => puzzle.size,
+    dims: () => [puzzle.rows, puzzle.cols],
     wordCount: () => puzzle.words.length,
     poolSize: WORD_POOL.length,
     generate: (s) => generateRandom(s),
