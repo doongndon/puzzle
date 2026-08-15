@@ -363,6 +363,7 @@
   }
   .btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.05); box-shadow: var(--shadow-md); }
   .btn:disabled { opacity: .45; cursor: default; }
+  .btn.ghost.off { opacity: .55; }
   .btn.ghost {
     background: var(--card);
     color: var(--ink-2);
@@ -676,6 +677,7 @@
 
           <div style="display:flex; gap:10px; align-self:flex-end;">
             <button class="btn" id="newRandomBtn" hidden>새 판 뽑기</button>
+            <button class="btn ghost" id="soundBtn" title="소리 켜고 끄기">소리 켬</button>
             <button class="btn ghost" id="resetBtn">이 판 처음부터</button>
           </div>
         </aside>
@@ -1208,6 +1210,7 @@
     if (pending.has(k)) {
       tray.push(pending.get(k));
       pending.delete(k);
+      Sound.undo();
       selWi = open.includes(selWi) ? selWi : (open.length ? open[0] : null);
       selCell = k;
       renderAll();
@@ -1290,8 +1293,10 @@
     }
     const newly = puzzle.words.filter((w) => !beforeSolved.has(w.wi) && wordSolved(w.wi));
     if (newly.length) {
+      Sound.solve();
       toast(`옳거니! ${newly.map((w) => `「${w.answer}」`).join(", ")} 완성 — 누르면 뜻풀이가 열리오.`, "good");
     } else if (wrong) {
+      Sound.wrong();
       toast("짜 맞춘 낱말이 틀렸소. 글자가 보따리로 돌아갔소.", "bad");
     }
     saveState();
@@ -1307,6 +1312,7 @@
     tray.splice(idx, 1);
     const el = cellEls[placedKey];
     if (el) { el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); }
+    Sound.place();
     checkPendingWords();
     // 커서 이동
     if (selWi !== null && wordSolved(selWi)) {
@@ -1342,6 +1348,7 @@
     if (i > -1) tray.splice(i, 1);
     const el = cellEls[target];
     if (el) { el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); }
+    Sound.hint();
     toast("붓끝이 글자 한 자를 밝혔소.", "good");
     checkPendingWords();
     if (selWi !== null && !wordSolved(selWi)) {
@@ -1361,6 +1368,7 @@
     saveState();
     renderPanel();
     renderItems();
+    Sound.hint();
     toast("사전이 슬며시 뜻을 일러 주오.", "good");
   }
 
@@ -1409,6 +1417,7 @@
           <button class="btn" id="nextMadang">${nextLabel}</button>
           <button class="btn ghost" id="finishClose">판 구경하기</button>
         </div>`;
+      Sound.finish();
       $("finishVeil").classList.add("show");
       $("nextMadang").addEventListener("click", () => {
         $("finishVeil").classList.remove("show");
@@ -1416,6 +1425,100 @@
       });
       $("finishClose").addEventListener("click", () => $("finishVeil").classList.remove("show"));
     }, 650);
+  }
+
+  /* ── 소리 ────────────────────────────────
+     외부 소리 파일 없이 웹오디오로 만들어 낸다.
+     ──────────────────────────────────────── */
+  const Sound = (() => {
+    let ctx = null;
+    const on = () => save.sound !== false;
+    const ready = () => {
+      if (save.sound === false) return null;
+      if (!ctx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        ctx = new AC();
+      }
+      if (ctx.state === "suspended") ctx.resume();
+      return ctx;
+    };
+    // 나무·가죽을 두드리는 듯한 소리
+    const thump = (freq, dur, vol, type) => {
+      const c = ready(); if (!c) return;
+      const t = c.currentTime;
+      const o = c.createOscillator(), g = c.createGain();
+      o.type = type || "sine";
+      o.frequency.setValueAtTime(freq, t);
+      o.frequency.exponentialRampToValueAtTime(Math.max(40, freq * 0.5), t + dur);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(vol, t + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(c.destination);
+      o.start(t); o.stop(t + dur + 0.02);
+    };
+    // 쇠붙이가 울리는 듯한 소리 (징·꽹과리)
+    const gong = (freq, dur, vol) => {
+      const c = ready(); if (!c) return;
+      const t = c.currentTime;
+      [1, 1.48, 2.02, 2.71].forEach((m, i) => {
+        const o = c.createOscillator(), g = c.createGain();
+        o.type = "triangle";
+        o.frequency.setValueAtTime(freq * m, t);
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(vol / (i + 1.4), t + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + dur * (1 - i * 0.12));
+        o.connect(g); g.connect(c.destination);
+        o.start(t); o.stop(t + dur + 0.05);
+      });
+    };
+    // 쓸리는 듯한 잡음 (되돌릴 때)
+    const swish = (dur, vol) => {
+      const c = ready(); if (!c) return;
+      const t = c.currentTime;
+      const len = Math.floor(c.sampleRate * dur);
+      const buf = c.createBuffer(1, len, c.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+      const src = c.createBufferSource(); src.buffer = buf;
+      const f = c.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 1400;
+      const g = c.createGain(); g.gain.value = vol;
+      src.connect(f); f.connect(g); g.connect(c.destination);
+      src.start(t);
+    };
+    const notes = (list) => {
+      const c = ready(); if (!c) return;
+      list.forEach(([f, at, dur, vol]) => setTimeout(() => thump(f, dur, vol, "triangle"), at));
+    };
+    return {
+      isOn: on,
+      place: () => thump(320, 0.12, 0.18, "sine"),          // 글자를 놓을 때
+      pick: () => thump(520, 0.07, 0.12, "sine"),           // 칸을 고를 때
+      wrong: () => { thump(150, 0.22, 0.2, "square"); },    // 낱말이 틀렸을 때
+      undo: () => swish(0.18, 0.12),                        // 글자를 되돌릴 때
+      solve: () => notes([[523, 0, 0.18, 0.2], [659, 90, 0.18, 0.2], [784, 180, 0.3, 0.22]]), // 낱말을 맞혔을 때
+      hint: () => notes([[880, 0, 0.14, 0.14], [1175, 80, 0.22, 0.14]]),  // 힌트
+      finish: () => {                                        // 판을 다 풀었을 때
+        gong(220, 1.6, 0.22);
+        notes([[523, 120, 0.2, 0.18], [659, 260, 0.2, 0.18], [784, 400, 0.2, 0.18], [1046, 560, 0.7, 0.2]]);
+      },
+      newBoard: () => notes([[392, 0, 0.14, 0.14], [523, 90, 0.24, 0.16]]),
+      toggle: () => {
+        save.sound = save.sound === false;   // 꺼져 있었으면 켠다
+        persist();
+        if (save.sound !== false) { const c = ready(); if (c) thump(660, 0.12, 0.16, "sine"); }
+        renderSoundBtn();
+      },
+    };
+  })();
+
+  function renderSoundBtn() {
+    const b = $("soundBtn");
+    if (!b) return;
+    const on = save.sound !== false;
+    b.textContent = on ? "소리 켬" : "소리 끔";
+    b.classList.toggle("off", !on);
+    b.setAttribute("aria-pressed", on ? "true" : "false");
   }
 
   /* ── 알림쪽지 ── */
@@ -1440,9 +1543,11 @@
     save.randomSeed = Math.floor(Math.random() * 2147483647);
     persist();
     loadPuzzle(RANDOM);
+    Sound.newBoard();
     toast(`새 판을 뽑았소! 낱말 ${puzzle.words.length}개.`, "good");
   }
   $("newRandomBtn").addEventListener("click", newRandomBoard);
+  $("soundBtn").addEventListener("click", () => Sound.toggle());
   $("hintBtn").addEventListener("click", useHint);
   $("defBtn").addEventListener("click", useDef);
   $("resetBtn").addEventListener("click", () => {
@@ -1459,6 +1564,7 @@
 
   /* ── 시작 ── */
   loadPuzzle(cur);
+  renderSoundBtn();
 
   /* 자동 시험용 (게임에는 영향 없음) */
   window.__debug = {
