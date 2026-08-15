@@ -91,7 +91,7 @@
   /* ── 머리글 ───────────────────────────── */
   header.top { text-align: center; position: relative; margin-bottom: 4px; }
   h1.title {
-    font-size: clamp(32px, 6vw, 50px);
+    font-size: clamp(38px, 7vw, 60px);
     font-weight: 800;
     letter-spacing: .18em;
     text-indent: .18em;
@@ -160,7 +160,7 @@
     display: flex; justify-content: center; align-items: center;
     gap: 12px; margin-bottom: 26px;
   }
-  .diff-label { font-size: 16px; color: var(--ink-3); letter-spacing: .28em; text-indent: .28em; white-space: nowrap; }
+  .diff-label { font-size: 19px; color: var(--ink-3); letter-spacing: .28em; text-indent: .28em; white-space: nowrap; }
   .diff-tabs {
     display: flex; gap: 0;
     border: 1px solid var(--line-strong);
@@ -170,8 +170,8 @@
     box-shadow: var(--shadow-sm);
   }
   .diff-tabs button {
-    font-size: 17.5px;
-    padding: 9px 22px;
+    font-size: 21px;
+    padding: 12px 26px;
     white-space: nowrap;
     color: var(--ink-2);
     background: transparent;
@@ -200,8 +200,8 @@
   /* ── 낱말판 ───────────────────────────── */
   .progress-line {
     display: flex; align-items: center; justify-content: space-between;
-    font-size: 17px; color: var(--ink-2); letter-spacing: .08em;
-    width: min(94vw, 600px);
+    font-size: 20px; color: var(--ink-2); letter-spacing: .08em;
+    width: min(96vw, 680px);
   }
   .progress-line .bar {
     flex: 1; height: 5px; margin: 0 12px;
@@ -220,7 +220,7 @@
     display: grid;
     grid-template-columns: repeat(var(--n), 1fr);
     grid-template-rows: repeat(var(--n), 1fr);
-    width: min(94vw, 600px);
+    width: min(96vw, 680px);
     aspect-ratio: 1;
     border: 2px solid #3b2f22;
     border-radius: 12px;
@@ -237,7 +237,7 @@
     min-width: 0; min-height: 0;
     overflow: hidden;
     background: var(--cell);
-    font-size: clamp(22px, 5.6vw, 36px);
+    font-size: clamp(28px, 6.6vw, 46px);
     font-weight: 800;
     color: var(--ink);
     cursor: pointer;
@@ -253,7 +253,7 @@
   }
   .cell .num {
     position: absolute; top: 2px; left: 4px;
-    font-size: clamp(10px, 2vw, 13px);
+    font-size: clamp(11px, 2.2vw, 15px);
     font-weight: 600;
     color: var(--ink-3);
     font-family: var(--font-num);
@@ -284,7 +284,7 @@
     display: flex; align-items: center; gap: 8px;
     flex-wrap: wrap;
     white-space: nowrap;
-    font-size: 20px;
+    font-size: 24px;
     font-weight: 800;
     letter-spacing: .16em;
     color: var(--ink);
@@ -306,11 +306,11 @@
     color: var(--ink-3); letter-spacing: .04em;
   }
 
-  .tray-panel { width: min(94vw, 600px); }
+  .tray-panel { width: min(96vw, 680px); }
   .tray { display: flex; flex-wrap: wrap; gap: 9px; min-height: 56px; }
   .tile {
-    width: 60px; height: 60px;
-    font-size: 31px; font-weight: 800;
+    width: 72px; height: 72px;
+    font-size: 38px; font-weight: 800;
     color: var(--ink);
     background: linear-gradient(#fdf9ee, #f0e5c8);
     border: 1px solid rgba(122, 95, 55, .5);
@@ -332,10 +332,10 @@
     letter-spacing: .14em; margin-bottom: 8px;
   }
   .clue-current .word-boxes {
-    font-size: 34px; font-weight: 800; letter-spacing: .3em; color: var(--ink);
+    font-size: 42px; font-weight: 800; letter-spacing: .3em; color: var(--ink);
     margin: 2px 0 4px;
   }
-  .clue-current .status-line { font-size: 18px; color: var(--ink-2); line-height: 1.7; margin-top: 8px; }
+  .clue-current .status-line { font-size: 21px; color: var(--ink-2); line-height: 1.7; margin-top: 8px; }
   .clue-current .def-peek {
     margin-top: 12px; padding: 11px 14px;
     background: rgba(60, 90, 143, .07);
@@ -344,11 +344,11 @@
     border-radius: 0 8px 8px 0;
   }
   .clue-current .def-peek b { color: var(--blue); }
-  .clue-current .placeholder { color: var(--ink-3); font-size: 18.5px; line-height: 1.8; }
+  .clue-current .placeholder { color: var(--ink-3); font-size: 21px; line-height: 1.8; }
 
   .btn {
-    font-size: 19px;
-    padding: 12px 22px;
+    font-size: 23px;
+    padding: 15px 28px;
     border-radius: 9px;
     border: 1px solid rgba(111, 36, 30, .7);
     background: linear-gradient(160deg, #bb4a41, var(--red-deep));
@@ -370,9 +370,9 @@
   /* ── 보물 주머니(아이템) ─────────────────── */
   .items-row { display: flex; gap: 10px; flex-wrap: wrap; }
   .item-btn {
-    flex: 1 1 150px;
-    display: flex; align-items: center; gap: 12px;
-    font-size: 19px;
+    flex: 1 1 160px;
+    display: flex; align-items: center; gap: 13px;
+    font-size: 23px;
     padding: 14px 16px;
     background: linear-gradient(#fbf5e6, #f0e5c8);
     border: 1px solid var(--line-strong);
@@ -401,19 +401,19 @@
   }
   .item-btn .label { flex: 1; text-align: left; line-height: 1.35; }
   .item-btn .label small { display: block; font-size: 13.5px; color: var(--ink-3); white-space: nowrap; }
-  .item-btn .count { font-size: 24px; font-weight: 700; color: var(--red-deep); font-family: var(--font-num); }
+  .item-btn .count { font-size: 30px; font-weight: 700; color: var(--red-deep); font-family: var(--font-num); }
 
   /* ── 낱말 목록 ───────────────────────── */
   .clues { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px; }
   @media (max-width: 480px) { .clues { grid-template-columns: 1fr; } }
   .clues h3 {
-    font-size: 16.5px; color: var(--blue);
+    font-size: 19px; color: var(--blue);
     letter-spacing: .32em; text-indent: .05em;
     margin: 4px 0 7px;
   }
   .clues ol { list-style: none; }
   .clues li {
-    font-size: 19px; line-height: 1.55;
+    font-size: 23px; line-height: 1.55;
     padding: 8px 10px 8px 6px;
     border-radius: 8px;
     cursor: pointer;
@@ -466,7 +466,7 @@
   }
   .veil.show .scroll-card { transform: none; }
   .scroll-card .word-title {
-    font-size: 38px; font-weight: 800; letter-spacing: .26em; text-indent: .26em;
+    font-size: 46px; font-weight: 800; letter-spacing: .26em; text-indent: .26em;
     color: var(--ink);
     margin: 8px 0 4px;
   }
@@ -477,7 +477,7 @@
     border-radius: 2px;
   }
   .scroll-card .def-text {
-    font-size: 20px;
+    font-size: 24px;
     font-weight: 600; line-height: 1.95; color: var(--ink-2);
     text-align: left;
     padding: 0 4px;
@@ -512,8 +512,8 @@
     0% { transform: rotate(-4deg) scale(2.2); opacity: 0; }
     100% { transform: rotate(-4deg) scale(1); opacity: 1; }
   }
-  .scroll-card.finish h2 { font-size: 30px; letter-spacing: .3em; text-indent: .3em; color: var(--ink); }
-  .scroll-card.finish p { margin-top: 12px; font-size: 19px; line-height: 1.85; color: var(--ink-2); }
+  .scroll-card.finish h2 { font-size: 36px; letter-spacing: .3em; text-indent: .3em; color: var(--ink); }
+  .scroll-card.finish p { margin-top: 12px; font-size: 22px; line-height: 1.85; color: var(--ink-2); }
   .scroll-card.finish .stat { color: var(--red-deep); font-weight: 700; }
   .scroll-card.finish .close-row { display: flex; gap: 10px; justify-content: center; }
 
@@ -524,8 +524,8 @@
     background: rgba(43, 33, 24, .95);
     color: #f2e8d3;
     font-family: var(--font-brush);
-    font-size: 19px; letter-spacing: .08em;
-    padding: 14px 30px;
+    font-size: 23px; letter-spacing: .08em;
+    padding: 17px 34px;
     border-radius: 999px;
     border: 1px solid rgba(242,232,211,.22);
     box-shadow: var(--shadow-md);
@@ -547,39 +547,60 @@
 
   /* ── 휴대폰: 글씨를 더욱 크게 ─────────────── */
   @media (max-width: 880px) {
-    .cell { font-size: clamp(26px, 8vw, 38px); font-weight: 800; }
+    .cell { font-size: clamp(30px, 9.5vw, 46px); font-weight: 800; }
     .tile { font-weight: 800; }
     .cell .num { font-size: 11px; }
-    .tile { width: 64px; height: 64px; font-size: 34px; }
+    .tile { width: 72px; height: 72px; font-size: 40px; }
     .tray { gap: 10px; }
     .tray .all-done { font-size: 20px; }
-    .panel h2 { font-size: 22px; }
+    .panel h2 { font-size: 26px; }
     .panel h2 .small { font-size: 16px; }
     .clue-current .word-meta { font-size: 18px; }
-    .clue-current .word-boxes { font-size: 38px; }
-    .clue-current .status-line { font-size: 20px; }
+    .clue-current .word-boxes { font-size: 46px; }
+    .clue-current .status-line { font-size: 23px; }
     .clue-current .def-peek { font-size: 19px; line-height: 1.75; }
-    .clue-current .placeholder { font-size: 20px; }
-    .btn { font-size: 21px; padding: 13px 24px; }
-    .item-btn { font-size: 21px; }
+    .clue-current .placeholder { font-size: 23px; }
+    .btn { font-size: 25px; padding: 16px 30px; }
+    .item-btn { font-size: 25px; }
     .item-btn .label small { font-size: 16px; }
-    .item-btn .count { font-size: 26px; }
+    .item-btn .count { font-size: 32px; }
     .clues h3 { font-size: 18px; }
-    .clues li { font-size: 21px; }
+    .clues li { font-size: 25px; }
     .clues li .cnum { font-size: 17px; min-width: 24px; }
     .madang-tabs button { font-size: 19px; }
-    .diff-tabs button { font-size: 19px; }
+    .diff-tabs button { font-size: 23px; }
     .diff-label { font-size: 17px; }
-    .progress-line { font-size: 18px; }
-    #toast { font-size: 20px; padding: 15px 32px; }
-    .scroll-card .word-title { font-size: 42px; }
+    .progress-line { font-size: 21px; }
+    #toast { font-size: 24px; padding: 18px 36px; }
+    .scroll-card .word-title { font-size: 50px; }
     .scroll-card .word-dir { font-size: 17px; }
-    .scroll-card .def-text { font-size: 22px; line-height: 1.9; }
+    .scroll-card .def-text { font-size: 26px; line-height: 1.9; }
     .scroll-card .def-label { font-size: 16px; }
     .scroll-card .dict-link { font-size: 18px; }
     .scroll-card.finish h2 { font-size: 33px; }
     .scroll-card.finish p { font-size: 21px; }
     .foot-note { font-size: 16px; }
+  }
+
+  /* ── 아주 좁은 화면: 판 글씨는 크게 두고 둘레만 줄인다 ── */
+  @media (max-width: 480px) {
+    .sheet { padding: 20px 10px 26px; }
+    h1.title { font-size: clamp(28px, 8vw, 38px); letter-spacing: .1em; text-indent: .1em; }
+    .subtitle { font-size: 13px; letter-spacing: .22em; text-indent: .22em; }
+    .seal { position: static; margin: 0 auto 10px; }
+    .diff-row { gap: 8px; flex-wrap: wrap; }
+    .diff-label { font-size: 15px; letter-spacing: .12em; text-indent: .12em; }
+    .diff-tabs button { font-size: 17px; padding: 9px 16px; letter-spacing: .06em; }
+    .progress-line { font-size: 15px; letter-spacing: 0; }
+    .progress-line .bar { margin: 0 8px; }
+    .panel { padding: 13px 13px; }
+    .panel h2 { font-size: 21px; }
+    .panel h2 .small { font-size: 13px; }
+    .item-btn { font-size: 20px; padding: 12px 12px; }
+    .item-btn .label small { font-size: 13px; }
+    .btn { font-size: 20px; padding: 13px 18px; }
+    .tile { width: 62px; height: 62px; font-size: 34px; }
+    .clues li { font-size: 22px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -678,6 +699,7 @@
   <div id="toast"></div>
 
   <script src="puzzles.js"></script>
+  <script src="words.js"></script>
   <script>
   "use strict";
   /* ================================================================
@@ -700,12 +722,18 @@
   /* 150개 낱말 풀: 고정 마당의 낱말 + 랜덤 전용 낱말 */
   const WORD_POOL = (() => {
     const map = new Map();
+    const usable = (w) => [...w.answer].length >= 2;   // 한 글자 낱말은 교차에 쓸 수 없다
     PUZZLES.forEach((p) => p.words.forEach((w) => {
-      if (!map.has(w.answer)) map.set(w.answer, { answer: w.answer, clue: w.clue || "", def: w.def });
+      if (usable(w) && !map.has(w.answer)) map.set(w.answer, { answer: w.answer, clue: w.clue || "", def: w.def });
     }));
     EXTRA_WORDS.forEach((w) => {
-      if (!map.has(w.answer)) map.set(w.answer, { answer: w.answer, clue: w.clue || "", def: w.def });
+      if (usable(w) && !map.has(w.answer)) map.set(w.answer, { answer: w.answer, clue: w.clue || "", def: w.def });
     });
+    if (typeof COMMON_WORDS !== "undefined") {
+      COMMON_WORDS.forEach((w) => {
+        if (usable(w) && !map.has(w.answer)) map.set(w.answer, { answer: w.answer, clue: "", def: w.def });
+      });
+    }
     return [...map.values()];
   })();
 
