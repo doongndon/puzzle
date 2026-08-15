@@ -10,9 +10,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --ink: #2f261c;
-    --ink-2: #6b5a45;
-    --ink-3: #9c8869;
+    --ink: #211a10;
+    --ink-2: #4e3f2a;
+    --ink-3: #7c684a;
     --paper: #f4ecdb;
     --paper-2: #ece0c6;
     --cell: #faf4e6;
@@ -37,6 +37,7 @@
 
   body {
     font-family: var(--font-brush);
+    font-weight: 700;
     color: var(--ink);
     background-color: #231d16;
     background-image:
@@ -237,7 +238,7 @@
     overflow: hidden;
     background: var(--cell);
     font-size: clamp(22px, 5.6vw, 36px);
-    font-weight: 700;
+    font-weight: 800;
     color: var(--ink);
     cursor: pointer;
     transition: background-color .15s ease, box-shadow .15s ease;
@@ -253,7 +254,7 @@
   .cell .num {
     position: absolute; top: 2px; left: 4px;
     font-size: clamp(10px, 2vw, 13px);
-    font-weight: 400;
+    font-weight: 600;
     color: var(--ink-3);
     font-family: var(--font-num);
   }
@@ -284,6 +285,7 @@
     flex-wrap: wrap;
     white-space: nowrap;
     font-size: 20px;
+    font-weight: 800;
     letter-spacing: .16em;
     color: var(--ink);
     padding-bottom: 10px;
@@ -300,7 +302,7 @@
   .panel h2 .small {
     margin-left: auto;
     white-space: normal;
-    font-size: 15px; font-weight: 400;
+    font-size: 15px; font-weight: 600;
     color: var(--ink-3); letter-spacing: .04em;
   }
 
@@ -308,7 +310,7 @@
   .tray { display: flex; flex-wrap: wrap; gap: 9px; min-height: 56px; }
   .tile {
     width: 60px; height: 60px;
-    font-size: 31px; font-weight: 700;
+    font-size: 31px; font-weight: 800;
     color: var(--ink);
     background: linear-gradient(#fdf9ee, #f0e5c8);
     border: 1px solid rgba(122, 95, 55, .5);
@@ -330,7 +332,7 @@
     letter-spacing: .14em; margin-bottom: 8px;
   }
   .clue-current .word-boxes {
-    font-size: 34px; letter-spacing: .3em; color: var(--ink);
+    font-size: 34px; font-weight: 800; letter-spacing: .3em; color: var(--ink);
     margin: 2px 0 4px;
   }
   .clue-current .status-line { font-size: 18px; color: var(--ink-2); line-height: 1.7; margin-top: 8px; }
@@ -475,7 +477,8 @@
     border-radius: 2px;
   }
   .scroll-card .def-text {
-    font-size: 20px; line-height: 1.95; color: var(--ink-2);
+    font-size: 20px;
+    font-weight: 600; line-height: 1.95; color: var(--ink-2);
     text-align: left;
     padding: 0 4px;
   }
@@ -544,7 +547,8 @@
 
   /* ── 휴대폰: 글씨를 더욱 크게 ─────────────── */
   @media (max-width: 880px) {
-    .cell { font-size: clamp(26px, 8vw, 38px); }
+    .cell { font-size: clamp(26px, 8vw, 38px); font-weight: 800; }
+    .tile { font-weight: 800; }
     .cell .num { font-size: 11px; }
     .tile { width: 64px; height: 64px; font-size: 34px; }
     .tray { gap: 10px; }
