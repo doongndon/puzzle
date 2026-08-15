@@ -217,10 +217,12 @@
 
   .board {
     --n: 9;
+    --board-w: min(96vw, 680px);
+    --cell-w: calc((var(--board-w) - 6px) / var(--n));
     display: grid;
     grid-template-columns: repeat(var(--n), 1fr);
     grid-template-rows: repeat(var(--n), 1fr);
-    width: min(96vw, 680px);
+    width: var(--board-w);
     aspect-ratio: 1;
     border: 2px solid #3b2f22;
     border-radius: 12px;
@@ -237,7 +239,7 @@
     min-width: 0; min-height: 0;
     overflow: hidden;
     background: var(--cell);
-    font-size: clamp(28px, 6.6vw, 46px);
+    font-size: calc(var(--cell-w) * .66);
     font-weight: 800;
     color: var(--ink);
     cursor: pointer;
@@ -253,7 +255,7 @@
   }
   .cell .num {
     position: absolute; top: 2px; left: 4px;
-    font-size: clamp(11px, 2.2vw, 15px);
+    font-size: calc(var(--cell-w) * .22);
     font-weight: 600;
     color: var(--ink-3);
     font-family: var(--font-num);
@@ -547,9 +549,7 @@
 
   /* ── 휴대폰: 글씨를 더욱 크게 ─────────────── */
   @media (max-width: 880px) {
-    .cell { font-size: clamp(30px, 9.5vw, 46px); font-weight: 800; }
     .tile { font-weight: 800; }
-    .cell .num { font-size: 11px; }
     .tile { width: 72px; height: 72px; font-size: 40px; }
     .tray { gap: 10px; }
     .tray .all-done { font-size: 20px; }
@@ -861,6 +861,7 @@
       down: Array.from({ length: size }, () => Array(size).fill(false)),
     };
     const placed = [];
+    let minR = size, maxR = -1, minC = size, maxC = -1;   // 글자가 쓰인 자리의 테두리
     const pool = shuffle(WORD_POOL.slice(), rng);
 
     // 낱말을 (r,c,dir)에 둘 수 있는지 — 표준 십자말풀이 규칙 검사
@@ -891,8 +892,11 @@
       const chars = [...w.answer];
       const dr = dir === "down" ? 1 : 0, dc = dir === "across" ? 1 : 0;
       chars.forEach((ch, i) => {
-        g[r + dr * i][c + dc * i] = ch;
-        used[dir][r + dr * i][c + dc * i] = true;
+        const rr = r + dr * i, cc = c + dc * i;
+        g[rr][cc] = ch;
+        used[dir][rr][cc] = true;
+        minR = Math.min(minR, rr); maxR = Math.max(maxR, rr);
+        minC = Math.min(minC, cc); maxC = Math.max(maxC, cc);
       });
       placed.push({ answer: w.answer, clue: w.clue, def: w.def, row: r, col: c, dir });
     };
@@ -922,7 +926,18 @@
           }
         }
         if (options.length) {
-          const [r, c, dir] = options[Math.floor(rng() * options.length)];
+          // 낱말이 옹기종기 모이도록, 쓰인 자리가 가장 적게 넓어지는 곳을 고른다
+          const span = (r, c, dir, len) => {
+            const er = r + (dir === "down" ? len - 1 : 0), ec = c + (dir === "across" ? len - 1 : 0);
+            const nr0 = Math.min(minR, r), nr1 = Math.max(maxR, er);
+            const nc0 = Math.min(minC, c), nc1 = Math.max(maxC, ec);
+            return Math.max(nr1 - nr0 + 1, nc1 - nc0 + 1);
+          };
+          const len = chars.length;
+          let bestSpan = Infinity;
+          options.forEach(([r, c, dir]) => { bestSpan = Math.min(bestSpan, span(r, c, dir, len)); });
+          const tight = options.filter(([r, c, dir]) => span(r, c, dir, len) === bestSpan);
+          const [r, c, dir] = tight[Math.floor(rng() * tight.length)];
           putWord(w, r, c, dir);
           progress = true;
         }
@@ -930,14 +945,12 @@
     }
 
     // 쓰인 영역을 판 가운데로 옮긴다
-    let minR = size, maxR = 0, minC = size, maxC = 0;
-    for (let r = 0; r < size; r++)
-      for (let c = 0; c < size; c++)
-        if (g[r][c]) { minR = Math.min(minR, r); maxR = Math.max(maxR, r); minC = Math.min(minC, c); maxC = Math.max(maxC, c); }
-    const shiftR = Math.floor((size - 1 - (maxR - minR)) / 2) - minR;
-    const shiftC = Math.floor((size - 1 - (maxC - minC)) / 2) - minC;
+    const usedH = maxR - minR + 1, usedW = maxC - minC + 1;
+    const trimmed = Math.max(usedH, usedW);          // 쓰인 자리만큼만 판을 잡는다
+    const shiftR = Math.floor((trimmed - usedH) / 2) - minR;
+    const shiftC = Math.floor((trimmed - usedW) / 2) - minC;
     return {
-      name: "랜덤 마당", theme: "복불복", size,
+      name: "랜덤 마당", theme: "복불복", size: trimmed,
       words: placed.map((w) => ({ answer: w.answer, clue: w.clue, def: w.def, dir: w.dir, row: w.row + shiftR, col: w.col + shiftC })),
     };
   }
