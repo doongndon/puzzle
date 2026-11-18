@@ -1,12 +1,28 @@
 name: 사전 뜻풀이 만들기
 
 # 국립국어원 사전 공개 사본(한국어기초사전·우리말샘, CC BY-SA 2.0 KR)에서
-# 퍼즐 낱말의 뜻풀이를 뽑아 dict.js로 저장한다. 낱말을 바꾼 뒤 손으로 돌린다.
+# 퍼즐 낱말의 뜻풀이를 골라 dict.js로 저장한다.
+# 낱말 파일(puzzles.js, words.js)이나 고르기 규칙(.github/dict/picks.json)이 바뀌면 저절로 돌고,
+# dict.js가 바뀌면 GitHub Pages 배포도 다시 돌린다.
 on:
   workflow_dispatch:
+    inputs:
+      refetch:
+        description: "사전 자료를 처음부터 다시 받기"
+        type: boolean
+        default: false
+  push:
+    branches: ["claude/korean-crossword-puzzle-sby93z"]
+    paths:
+      - puzzles.js
+      - words.js
+      - .github/dict/picks.json
+      - .github/scripts/dict_*.py
+      - .github/scripts/list-words.js
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: dict-build
@@ -24,16 +40,22 @@ jobs:
         run: pip install --quiet pyarrow
       - name: 퍼즐 낱말 목록 뽑기
         run: node .github/scripts/list-words.js > "$RUNNER_TEMP/words.json"
-      - name: 사전에서 뜻풀이 뽑기
-        run: python .github/scripts/build_dict.py "$RUNNER_TEMP/words.json" "$RUNNER_TEMP/dict" dict.js
-      - name: 바뀌었으면 저장
+      - name: 사전에서 뜻풀이 후보 모으기
+        run: python .github/scripts/dict_fetch.py "$RUNNER_TEMP/words.json" "$RUNNER_TEMP/dict" .github/dict/candidates.json ${{ inputs.refetch && '--all' || '' }}
+      - name: 뜻풀이 고르기
+        run: python .github/scripts/dict_pick.py "$RUNNER_TEMP/words.json" .github/dict/candidates.json .github/dict/picks.json dict.js
+      - name: 바뀌었으면 저장하고 다시 배포
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add dict.js
+          git add dict.js .github/dict/candidates.json
           if git diff --cached --quiet; then
             echo "바뀐 것 없음"
           else
             git commit -m "사전 뜻풀이 갱신 (국립국어원 한국어기초사전·우리말샘)"
+            git pull --rebase --quiet
             git push
+            gh workflow run deploy.yml --ref "$GITHUB_REF_NAME"
           fi
