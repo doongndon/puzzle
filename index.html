@@ -450,6 +450,7 @@
     text-align: center; margin-top: 30px;
     font-size: 15.5px; color: var(--ink-3); letter-spacing: .22em;
   }
+  .foot-note.source-note { margin-top: 8px; font-size: 13px; letter-spacing: .06em; }
 
   /* ── 엽전·상점·업적 ───────────────────── */
   .top-row {
@@ -568,6 +569,8 @@
     text-decoration: underline; text-underline-offset: 4px;
     text-decoration-color: rgba(60, 90, 143, .4);
   }
+  .scroll-card .def-src { margin-top: 10px; font-size: 14px; color: var(--ink-3); text-align: left; padding: 0 4px; }
+  .scroll-card .def-src .nobr { white-space: nowrap; }
   .scroll-card .close-row { margin-top: 24px; }
   .scroll-card .extra-def + .extra-def { margin-top: 22px; border-top: 1px dashed var(--line-strong); padding-top: 20px; }
 
@@ -766,6 +769,7 @@
       </div>
 
       <p class="foot-note">광고 없이 즐기는 우리말 놀이 · 낱말을 완성하면 뜻풀이가 열립니다</p>
+      <p class="foot-note source-note">뜻풀이: 국립국어원 한국어기초사전·우리말샘 (CC BY-SA 2.0 KR)</p>
     </div>
     <div class="dancheong bottom"></div>
   </div>
@@ -795,6 +799,7 @@
 
   <script src="puzzles.js"></script>
   <script src="words.js"></script>
+  <script src="dict.js"></script>
   <script>
   "use strict";
   /* ================================================================
@@ -839,8 +844,20 @@
         if (usable(w) && !map.has(w.answer)) map.set(w.answer, { answer: w.answer, clue: "", def: w.def, tier: tierOf(w.answer, true) });
       });
     }
+    // 국립국어원 사전 뜻풀이(dict.js)가 있으면 그것으로 바꾸고, 사전에 없는 낱말은 판에 쓰지 않는다
+    if (typeof DICT_DEFS !== "undefined") {
+      map.forEach((entry, answer) => {
+        const d = DICT_DEFS[answer];
+        if (!d) { map.delete(answer); return; }
+        entry.def = d[0];
+        entry.src = d[1];          // k: 한국어기초사전, u: 우리말샘
+      });
+    }
     return [...map.values()];
   })();
+  const DICT_NAMES = { k: "한국어기초사전", u: "우리말샘" };
+  // 뜻보기로 미리 볼 때는 뜻풀이 속에 든 정답("목련과의", "‘딸기’의 열매")을 ○로 가린다
+  const maskAnswer = (def, answer) => def.split(answer).join("○".repeat([...answer].length));
 
   const $ = (id) => document.getElementById(id);
   const boardEl = $("board");
@@ -1010,7 +1027,7 @@
         minR = Math.min(minR, rr); maxR = Math.max(maxR, rr);
         minC = Math.min(minC, cc); maxC = Math.max(maxC, cc);
       });
-      placed.push({ answer: w.answer, clue: w.clue, def: w.def, row: r, col: c, dir });
+      placed.push({ answer: w.answer, clue: w.clue, def: w.def, src: w.src, row: r, col: c, dir });
     };
 
     // 첫 낱말은 가운데에
@@ -1063,7 +1080,7 @@
     return {
       name: "랜덤 마당", theme: "복불복",
       rows: usedH, cols: usedW, size: Math.max(usedH, usedW),
-      words: placed.map((w) => ({ answer: w.answer, clue: w.clue, def: w.def, dir: w.dir, row: w.row + shiftR, col: w.col + shiftC })),
+      words: placed.map((w) => ({ answer: w.answer, clue: w.clue, def: w.def, src: w.src, dir: w.dir, row: w.row + shiftR, col: w.col + shiftC })),
     };
   }
 
@@ -1290,7 +1307,7 @@
     } else {
       html += `<p class="status-line">글자를 올려 낱말을 짜 보시오. 칸이 다 차면 단어째 맞춰 보오.<br>올린 글자는 다시 누르면 보따리로 돌아가오.</p>`;
       if (defsUsed.has(w.wi)) {
-        html += `<div class="def-peek"><b>뜻보기</b> — ${w.def}</div>`;
+        html += `<div class="def-peek"><b>뜻보기</b> — ${maskAnswer(w.def, w.answer)}</div>`;
       }
     }
     box.innerHTML = html;
@@ -1530,6 +1547,7 @@
         <p class="word-title">${w.answer}</p>
         <div class="brush-line"></div>
         <p class="def-text">${w.def}</p>
+        ${w.src ? `<p class="def-src">뜻풀이 출처: 국립국어원 ${DICT_NAMES[w.src]} <span class="nobr">· CC BY-SA 2.0 KR</span></p>` : ""}
         <a class="dict-link" target="_blank" rel="noopener"
            href="https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=${encodeURIComponent(w.answer)}">표준국어대사전에서 찾아보기 ↗</a>
       </div>`;

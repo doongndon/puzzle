@@ -5,7 +5,7 @@
 
 고르는 법
   1. picks.json에 적힌 낱말은 그대로 따른다.
-     "낱말": "글귀"  → 뜻풀이(또는 원어)에 그 글귀가 든 뜻을 쓴다
+     "낱말": "글귀"  → 뜻풀이나 원어(한자 등)에 그 글귀가 든 뜻을 쓴다
      "낱말": null    → 사전 뜻이 퍼즐에 맞지 않으니 낱말을 빼 버린다
   2. 아니면 퍼즐에 적힌 뜻·열쇠와 가장 닮은 뜻을 고르되, 쉬운 한국어기초사전(k)을 먼저 쓴다.
      우리말샘(u) 뜻이 확실히 더 닮았을 때만 우리말샘을 쓴다.
@@ -14,9 +14,6 @@
 import json
 import re
 import sys
-
-WORDS_JSON, CANDS_JSON, PICKS_JSON, OUT_JS = sys.argv[1:5]
-REVIEW = "--review" in sys.argv[5:]
 
 LIMIT = 120        # 긴 뜻풀이는 이 길이 안에서 문장 단위로 줄인다
 U_MARGIN = 0.12    # 우리말샘 뜻이 이만큼 더 닮아야 기초사전 대신 쓴다
@@ -49,10 +46,11 @@ def similarity(mine, theirs):
 
 NOTE = re.compile(r"\s*⇒.*$")                       # "⇒규범 표기는 ‘…’이다." 같은 덧붙임
 SELF_REF = "‘{}’"                                   # "‘딸기’의 열매."처럼 낱말 자신을 가리키는 뜻
+CROSS_REF = re.compile(r"^\(.*\)\s*→|^→")              # "(파래, 파래서)→ 파랗다" 같은 활용형 안내
 
 
 def trim(d):
-    d = NOTE.sub("", d).strip()
+    d = NOTE.sub("", d).strip().replace("<", "〈").replace(">", "〉")   # 화면에서 HTML 태그로 읽히지 않게
     parts = re.split(r"(?<=[.?!])\s+", d)
     out = parts[0]
     for p in parts[1:]:
@@ -74,6 +72,8 @@ def score(word, mine, c):
 
 
 def main():
+    WORDS_JSON, CANDS_JSON, PICKS_JSON, OUT_JS = sys.argv[1:5]
+    REVIEW = "--review" in sys.argv[5:]
     words = json.load(open(WORDS_JSON, encoding="utf-8"))
     data = json.load(open(CANDS_JSON, encoding="utf-8"))
     names = data["_fields"]
@@ -90,6 +90,7 @@ def main():
             continue
         cands = [dict(zip(["src", "pos", "def", "origin", "field", "cat", "region", "level", "head"], row))
                  for row in data["words"][word]]
+        cands = [c for c in cands if not CROSS_REF.search(c["def"])]
         if not cands:
             notes["missing"].append(word)
             continue
@@ -103,7 +104,7 @@ def main():
             notes["excluded"].append(word)
             continue
         if rule:
-            chosen = [c for c in cands if rule in c["def"] or rule == c["origin"]]
+            chosen = [c for c in cands if rule in c["def"] or rule in c["origin"]]
             if not chosen:
                 notes["pick_miss"].append(f"{word}: '{rule}'")
             best = max(chosen or cands, key=lambda c: c["score"])
@@ -163,4 +164,5 @@ def main():
                 print(f"   {mark} {c['score']:.2f} [{c['src']}/{c['pos']}] {extra} | {c['def'][:70]}")
 
 
-main()
+if __name__ == "__main__":
+    main()
