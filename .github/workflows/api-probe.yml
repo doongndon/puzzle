@@ -1,0 +1,23 @@
+name: 국립국어원 API 접속 확인
+
+# GitHub 서버에서 국립국어원 사전 API에 닿는지만 본다 (인증키 없이 — 오류 응답이 오면 닿는 것). 확인 뒤 지운다.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 접속 확인
+        run: |
+          for url in \
+            "https://stdict.korean.go.kr/api/search.do?key=test&q=%EC%82%AC%EA%B3%BC&req_type=json" \
+            "https://opendict.korean.go.kr/api/search?key=test&q=%EC%82%AC%EA%B3%BC&req_type=json" \
+            "https://krdict.korean.go.kr/api/search?key=test&q=%EC%82%AC%EA%B3%BC"; do
+            echo "== $url"
+            curl -sS -m 25 -o body.txt -w "HTTP %{http_code} (%{time_total}s)\n" "$url" || echo "접속 실패"
+            head -c 400 body.txt 2>/dev/null; echo
+          done
